@@ -118,29 +118,8 @@ export default function App() {
     }
   };
 
-  if (debugError) {
-    return (
-      <div className="bg-red-900 text-white h-screen p-10 overflow-auto text-lg font-mono">
-        <h1 className="text-2xl font-bold mb-4">TV Debug Error</h1>
-        <p>{debugError}</p>
-        <button
-          className="mt-8 px-6 py-3 bg-white text-black rounded"
-          onClick={() => window.location.reload()}
-        >
-          Reload
-        </button>
-      </div>
-    );
-  }
-
   if (status === 'loading') {
-<<<<<<< HEAD
-    if (status === 'loading') {
-      return <div className="bg-black text-white h-screen flex items-center justify-center">Carregando Player (V2)...</div>;
-    }
-=======
     return <div className="bg-black text-white h-screen flex items-center justify-center">Loading Player...</div>;
->>>>>>> b88a48df44362c719f62e448341efc49c24f4f73
   }
 
   if (status === 'pairing') {

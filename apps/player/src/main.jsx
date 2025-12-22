@@ -1,3 +1,4 @@
+import 'core-js/stable';
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { supabase } from './lib/supabase';
@@ -166,6 +167,10 @@ const initDebugger = () => {
 
   window.onerror = (msg, url, line, col, error) => {
     logToScreen('error', [`UNCATCHED: ${msg} @ ${line}:${col}`]);
+  };
+
+  window.onunhandledrejection = (event) => {
+    logToScreen('error', [`UNHANDLED REJECTION: ${event.reason ? event.reason.toString() : event.reason}`]);
   };
 };
 

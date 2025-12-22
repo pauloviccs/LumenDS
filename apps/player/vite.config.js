@@ -9,6 +9,7 @@ export default defineConfig({
     react(),
     legacy({
       targets: ['defaults', 'chrome 60', 'safari 11', 'ios 11'], // Broad support for Smart TVs (~2017+)
+      modernPolyfills: true,
     }),
     VitePWA({
       registerType: 'autoUpdate',

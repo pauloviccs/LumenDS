@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase';
 import { generatePairingCode, getDeviceId } from './lib/device';
 import PairingView from './views/PairingView';
 import PlayerView from './views/PlayerView';
+import PlaylistCacheManager from './PlaylistCacheManager';
 import './index.css';
 
 function App() {
@@ -60,6 +61,8 @@ function App() {
 
         if (pingError) console.error("Ping Error:", pingError);
 
+
+
         // Step 2: Fetch Playlist if assigned
         if (screenData.current_playlist_id) {
           // Optimization: Only if changed or if we don't have it?
@@ -99,7 +102,12 @@ function App() {
   }
 
   if (status === 'playing') {
-    return <PlayerView playlist={playlist} />;
+    return (
+      <>
+        <PlaylistCacheManager playlist={playlist} />
+        <PlayerView playlist={playlist} />
+      </>
+    );
   }
 
   return <div className="bg-black h-screen w-full flex items-center justify-center text-white">Carregando...</div>;

@@ -10,17 +10,36 @@ function SortableItem({ id, item, onRemove }) {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
     const style = { transform: CSS.Transform.toString(transform), transition };
 
+    // Construct Local Asset URL
+    // If item.path is absolute, we might need relative. 
+    // New items have relativePath. Old items might not.
+    // Fallback: If no relativePath, try to use name if it was root.
+    // Better: We should ensure item has relativePath.
+
+    const assetUrl = item.relativePath
+        ? `http://localhost:11222/${item.relativePath}`
+        : `http://localhost:11222/${item.name}`; // Legacy fallback for root items
+
     return (
         <div ref={setNodeRef} style={style} className="flex items-center space-x-3 bg-[#2a2a2a] p-3 rounded-lg border border-white/5 group">
             <button {...attributes} {...listeners} className="text-white/20 hover:text-white cursor-grab active:cursor-grabbing">
                 <GripVertical size={16} />
             </button>
-            <div className="w-12 h-12 bg-black rounded overflow-hidden flex-shrink-0">
-                {item.type === 'video' ? <Film size={20} className="m-auto text-white/50 h-full" /> : <img src={`file://${item.path}`} className="w-full h-full object-cover" />}
+            <div className="w-12 h-12 bg-black rounded overflow-hidden flex-shrink-0 relative">
+                {item.type === 'video' ? (
+                    <div className="w-full h-full bg-[#111] flex items-center justify-center">
+                        <Film size={20} className="text-white/50" />
+                    </div>
+                ) : (
+                    <img src={assetUrl} className="w-full h-full object-cover" />
+                )}
             </div>
             <div className="flex-1 min-w-0">
                 <p className="text-white text-sm truncate">{item.name}</p>
-                <p className="text-white/40 text-xs">{item.duration}s</p>
+                <div className="flex items-center space-x-2 text-white/40 text-xs">
+                    <span>{item.duration}s</span>
+                    {item.relativePath && <span className="opacity-50 text-[10px] truncate max-w-[100px]">{item.relativePath}</span>}
+                </div>
             </div>
             <button onClick={() => onRemove(id)} className="text-white/20 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Trash2 size={16} />
@@ -45,7 +64,8 @@ export default function PlaylistEditor({ playlist, onClose, onSave }) {
         const loadMedia = async () => {
             const ipcRenderer = window.require ? window.require('electron').ipcRenderer : null;
             if (ipcRenderer) {
-                const files = await ipcRenderer.invoke('get-assets');
+                // Use flattened recursive list to show ALL media files including those in subfolders
+                const files = await ipcRenderer.invoke('get-all-assets-flattened');
                 setAvailableMedia(files);
             }
         };
@@ -69,7 +89,8 @@ export default function PlaylistEditor({ playlist, onClose, onSave }) {
             id: crypto.randomUUID(), // Unique ID for the playlist instance
             type: file.type,
             name: file.name,
-            path: file.path,
+            path: file.path, // We might want to store relativePath for portability?
+            relativePath: file.relativePath, // Store this!
             duration: 10 // Default duration
         };
         setItems([...items, newItem]);
@@ -141,12 +162,17 @@ export default function PlaylistEditor({ playlist, onClose, onSave }) {
                     <div className="flex-1 p-4 overflow-y-auto space-y-3">
                         {availableMedia.map((file, i) => (
                             <div key={i} className="group flex items-center space-x-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors" onClick={() => addItem(file)}>
-                                <div className="w-12 h-12 bg-black rounded overflow-hidden flex-shrink-0">
-                                    {file.type === 'video' ? <Film size={20} className="m-auto text-white" /> : <img src={file.preview} className="w-full h-full object-cover" />}
+                                <div className="w-12 h-12 bg-black rounded overflow-hidden flex-shrink-0 relative">
+                                    {/* Use local server for thumbnails */}
+                                    {file.type === 'video' ? (
+                                        <Film size={20} className="m-auto text-white" />
+                                    ) : (
+                                        <img src={`http://localhost:11222/${file.relativePath}`} className="w-full h-full object-cover" />
+                                    )}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-white text-xs truncate">{file.name}</p>
-                                    <p className="text-white/30 text-[10px]">Clique para adicionar</p>
+                                    <p className="text-white/30 text-[10px] truncate">{file.relativePath}</p>
                                 </div>
                                 <Plus size={16} className="text-blue-500 opacity-0 group-hover:opacity-100" />
                             </div>

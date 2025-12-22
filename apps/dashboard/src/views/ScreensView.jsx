@@ -132,6 +132,8 @@ export default function ScreensView() {
         }
     };
 
+
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -223,8 +225,11 @@ export default function ScreensView() {
                             </div>
                         </div>
 
-                        <div className="flex items-center space-x-6">
+                        <div className="flex items-center space-x-4">
                             <StatusBadge status={screen.status} />
+
+
+
                             <button
                                 onClick={() => handleDelete(screen.id)}
                                 className="text-white/20 hover:text-red-500 transition-colors"

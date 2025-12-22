@@ -1,8 +1,10 @@
 import React from 'react';
-import { Home, Folder, ListVideo, Monitor, Settings } from 'lucide-react';
+import { Home, Folder, ListVideo, Monitor, Settings, LogOut } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import PlaylistsView from '../views/PlaylistsView.jsx';
 import MediaView from '../views/MediaView.jsx';
 import ScreensView from '../views/ScreensView.jsx';
+import SettingsView from '../views/SettingsView.jsx';
 
 const SidebarItem = ({ icon: Icon, label, isActive, onClick }) => (
     <button
@@ -21,12 +23,18 @@ const SidebarItem = ({ icon: Icon, label, isActive, onClick }) => (
 export default function MainLayout() {
     const [activeTab, setActiveTab] = React.useState('screens'); // Default to Screens for testing
 
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        // State change in main.jsx will handle redirect
+    };
+
     const renderContent = () => {
         switch (activeTab) {
             case 'home': return <div className="text-white">Home View (To Do)</div>;
             case 'media': return <MediaView />;
             case 'playlists': return <PlaylistsView />;
             case 'screens': return <ScreensView />;
+            case 'settings': return <SettingsView />;
             default: return <div className="text-white">404</div>;
         }
     };
@@ -52,8 +60,15 @@ export default function MainLayout() {
                     <SidebarItem label="Telas" icon={Monitor} isActive={activeTab === 'screens'} onClick={() => setActiveTab('screens')} />
                 </nav>
 
-                <div className="pb-6 px-2">
+                <div className="pb-6 px-2 space-y-1">
                     <SidebarItem label="Ajustes" icon={Settings} isActive={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+                    <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-sm font-medium text-red-400/60 hover:text-red-400 hover:bg-red-500/10 group mt-4"
+                    >
+                        <LogOut size={18} className="text-red-400/40 group-hover:text-red-400 transition-colors" />
+                        <span>Sair</span>
+                    </button>
                 </div>
             </aside>
 

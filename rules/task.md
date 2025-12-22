@@ -20,8 +20,8 @@
 
     - [/] Web Player Development <!-- id: 14 -->
     - [x] Basic Player Engine (Video/Image + Transitions) <!-- id: 15 -->
-    - [ ] Offline Support (Service Workers / Cache API) <!-- id: 16 -->
-    - [ ] Synchronization Logic (Polling/Sockets) <!-- id: 17 -->
+    - [x] Offline Support (Service Workers / Cache API) <!-- id: 16 -->
+    - [x] Synchronization Logic (Polling/Sockets) <!-- id: 17 -->
     - [ ] Overlay Rendering Layer (Canvas on top of Video) <!-- id: 22 -->
 
 - [x] Playlist Editor & Assignment <!-- id: 23 -->
@@ -35,5 +35,8 @@
 - [ ] Authentication & Security <!-- id: 28 -->
     - [ ] Login View (Email/Github) <!-- id: 29 -->
     - [ ] Route Protection (AuthGuard) <!-- id: 30 -->
-    - [ ] Secure RLS Policies (User Scoped) <!-- id: 31 -->
-    - [ ] Public Access for Player (Read-Only) <!-- id: 32 -->
+    - [x] Secure RLS Policies (User Scoped) <!-- id: 31 -->
+    - [x] Public Access for Player (Read-Only) <!-- id: 32 -->
+
+- [ ] New Features <!-- id: 33 -->
+    - [ ] Offline Support (PWA + Cache) <!-- id: 34 -->

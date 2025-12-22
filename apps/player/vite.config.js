@@ -66,8 +66,13 @@ export default defineConfig({
   ],
   base: './',
   build: {
-    target: 'es2015', // Transpile to ES2015 for older engines
+    target: ['chrome58', 'ios11'], // Force transpilation of optional chaining (added in Chrome 80)
     minify: 'terser',
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2015',
+    },
   },
   server: {
     port: 3000,

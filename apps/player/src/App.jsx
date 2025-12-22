@@ -134,9 +134,13 @@ export default function App() {
   }
 
   if (status === 'loading') {
+<<<<<<< HEAD
     if (status === 'loading') {
       return <div className="bg-black text-white h-screen flex items-center justify-center">Carregando Player (V2)...</div>;
     }
+=======
+    return <div className="bg-black text-white h-screen flex items-center justify-center">Loading Player...</div>;
+>>>>>>> b88a48df44362c719f62e448341efc49c24f4f73
   }
 
   if (status === 'pairing') {

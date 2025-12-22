@@ -1,0 +1,17 @@
+{
+  "name": "lumen-ds",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:dashboard": "npm run dev -w apps/dashboard",
+    "dev:player": "npm run dev -w apps/player",
+    "build": "npm run build --workspaces"
+  },
+  "keywords": [],
+  "author": "UEoE 1",
+  "license": "ISC",
+  "description": "Zero Cost Digital Signage Solution"
+}

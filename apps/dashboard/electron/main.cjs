@@ -146,6 +146,31 @@ ipcMain.handle('delete-asset', async (event, relativePath) => {
     }
 });
 
+// New Handler for reading file buffers (for Cloud Upload)
+ipcMain.handle('read-file-buffer', async (event, relativePath) => {
+    try {
+        // Handle absolute paths (legacy) or relative paths
+        let targetPath = relativePath;
+        if (!path.isAbsolute(relativePath)) {
+            targetPath = path.join(ASSETS_PATH, relativePath);
+        }
+
+        // Security check if using relative logic
+        if (!path.isAbsolute(relativePath) && !targetPath.startsWith(ASSETS_PATH)) {
+            console.error('Security Block: Attempt to read outside Assets', targetPath);
+            return null;
+        }
+
+        if (fs.existsSync(targetPath)) {
+            return fs.readFileSync(targetPath);
+        }
+        return null;
+    } catch (e) {
+        console.error('Error reading file buffer:', e);
+        return null;
+    }
+});
+
 const createWindow = () => {
     // Create the browser window.
     const mainWindow = new BrowserWindow({

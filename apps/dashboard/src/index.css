@@ -1,28 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  /* Liquid Glass Palette */
+  --glass-surface-light: rgba(255, 255, 255, 0.08);
+  --glass-surface-dark: rgba(20, 20, 30, 0.6);
+  --glass-border-light: linear-gradient(145deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.05) 100%);
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  --electric-blurple-start: #5E60CE;
+  --electric-blurple-end: #6930C3;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Font Families */
+  --font-header: 'Montserrat', sans-serif;
+  --font-body: 'Inter', sans-serif;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+  display: block;
+  /* Changed from flex/place-items center for dashboard layout */
+  min-width: 100vw;
   min-height: 100vh;
+  font-family: var(--font-body);
+  color: white;
+  background-color: #0f0f11;
+  /* Fallback */
+  overflow: hidden;
+  /* App-like feel */
+  user-select: none;
+}
+
+/* Typography Overrides */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-header);
+  letter-spacing: -0.02em;
+}
+
+/* 
+  LIQUID GLASS UTILITIES 
+  The core of the new design system.
+*/
+
+.liquid-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0f0f12 100%);
+  overflow: hidden;
+}
+
+.liquid-bg::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(94, 96, 206, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(105, 48, 195, 0.15) 0%, transparent 40%);
+  animation: meshMove 20s ease-in-out infinite alternate;
+  filter: blur(80px);
+}
+
+@keyframes meshMove {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(-10%, -10%) rotate(5deg);
+  }
+}
+
+.liquid-card {
+  position: relative;
+  background: rgba(40, 40, 50, 0.3);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  /* Safari/Electron support */
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  /* Soft inner rim */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.liquid-card:hover {
+  background: rgba(60, 60, 80, 0.4);
+  border-color: rgba(94, 96, 206, 0.3);
+  /* Electric Blurple hint */
+  box-shadow:
+    0 12px 40px 0 rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px) scale(1.005);
+}
+
+.glass-panel {
+  background: rgba(20, 20, 30, 0.4);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
 }
 
 .wapp-drag-region {
@@ -33,9 +124,10 @@ button {
   -webkit-app-region: no-drag;
 }
 
-/* Scrollbar Styling */
+/* Custom Scrollbar tailored for Liquid UI */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -44,9 +136,26 @@ button {
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+/* Animations */
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

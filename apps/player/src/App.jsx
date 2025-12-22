@@ -45,11 +45,7 @@ export default function App() {
       const { data: screen, error } = await supabase
         .from('screens')
         .select('*')
-        .eq('id', deviceId) // Assuming we use UUID as ID. Or we use a hardware_id column?
-        // Actually, for better security/flow, we should verify if 'id' matches.
-        // But standard flow: 
-        // - If row exists -> Check status.
-        // - If row does NOT exist -> Create 'pending' row.
+        .eq('id', deviceId)
         .single();
 
       if (screen) {
@@ -71,71 +67,81 @@ export default function App() {
         )
         .subscribe();
 
-      return () => {
-        subscription.unsubscribe();
-      };
-    };
-
-    const generatePairingCode = () => {
-      // Generate 6-char random code (A-Z, 0-9)
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed I, 1, O, 0 for clarity
-      let code = '';
-      for (let i = 0; i < 6; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return code;
-    };
-
-    const registerNewScreen = async (deviceId) => {
-      const code = generatePairingCode();
-      setPairingCode(code);
-
-      // Insert into DB
-      // Note: This requires RLS to allow INSERT for anonymous? Or we use a public RPC?
-      // If strict RLS is on, this might fail without a public policy. 
-      // Assuming 'screens' allows public insert for 'pending' status or we use a function.
-      // For MVP/Demo: Let's assume we can insert.
-
-      // We need to be careful. Ideally, we shouldn't allow random inserts. 
-      // BUT for a pairing flow, usually the client creates a "Tentative" record.
-
-      const { data, error } = await supabase
-        .from('screens')
-        .upsert({
-          id: deviceId, // We force the UUID
-          name: `TV-${code}`,
-          status: 'pending',
-          pairing_code: code,
-          last_ping: new Date()
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error registering screen:', error);
-        // Fallback or retry
-      } else {
-        setStatus('pairing');
-      }
-    };
-
-    const handleScreenState = (screen) => {
-      setScreenData(screen);
-      if (screen.status === 'active' || screen.status === 'online') {
-        setStatus('active');
-      } else {
-        setPairingCode(screen.pairing_code);
-        setStatus('pairing');
-      }
-    };
-
-    if (status === 'loading') {
-      return <div className="bg-black text-white h-screen flex items-center justify-center">Loading Player...</div>;
+      // Note: We can't easily return cleanup from async function inside useEffect
+      // so we rely on the mount cycle.
+    } catch (e) {
+      console.error("Init Error:", e);
+      setDebugError(e.toString());
     }
+  };
 
-    if (status === 'pairing') {
-      return <PairingView code={pairingCode} />;
+  const generatePairingCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    return code;
+  };
 
-    return <PlayerView screenId={screenData?.id} />;
+  const registerNewScreen = async (deviceId) => {
+    const code = generatePairingCode();
+    setPairingCode(code);
+
+    const { data, error } = await supabase
+      .from('screens')
+      .upsert({
+        id: deviceId,
+        name: `TV-${code}`,
+        status: 'pending',
+        pairing_code: code,
+        last_ping: new Date()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error registering screen:', error);
+      setDebugError('Registration Failed: ' + error.message);
+    } else {
+      setStatus('pairing');
+    }
+  };
+
+  const handleScreenState = (screen) => {
+    setScreenData(screen);
+    if (screen.status === 'active' || screen.status === 'online') {
+      setStatus('active');
+    } else {
+      setPairingCode(screen.pairing_code);
+      setStatus('pairing');
+    }
+  };
+
+  if (debugError) {
+    return (
+      <div className="bg-red-900 text-white h-screen p-10 overflow-auto text-lg font-mono">
+        <h1 className="text-2xl font-bold mb-4">TV Debug Error</h1>
+        <p>{debugError}</p>
+        <button
+          className="mt-8 px-6 py-3 bg-white text-black rounded"
+          onClick={() => window.location.reload()}
+        >
+          Reload
+        </button>
+      </div>
+    );
   }
+
+  if (status === 'loading') {
+    if (status === 'loading') {
+      return <div className="bg-black text-white h-screen flex items-center justify-center">Carregando Player (V2)...</div>;
+    }
+  }
+
+  if (status === 'pairing') {
+    return <PairingView code={pairingCode} />;
+  }
+
+  return <PlayerView screenId={screenData?.id} />;
+}

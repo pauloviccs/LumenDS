@@ -113,6 +113,67 @@ function App() {
   return <div className="bg-black h-screen w-full flex items-center justify-center text-white">Carregando...</div>;
 }
 
+// --------------------------------------------------------
+// CRITICAL TV DEBUGGER
+// Hijack console to show on screen (WebOS has no devtools)
+// --------------------------------------------------------
+const initDebugger = () => {
+  const debugDiv = document.createElement('div');
+  debugDiv.id = 'debug-console';
+  debugDiv.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 300px;
+    height: 100vh;
+    background: rgba(0,0,0,0.8);
+    color: #0f0;
+    font-family: monospace;
+    font-size: 10px;
+    padding: 10px;
+    z-index: 9999;
+    overflow-y: auto;
+    pointer-events: none;
+    white-space: pre-wrap;
+    word-break: break-all;
+  `;
+  document.body.appendChild(debugDiv);
+
+  const logToScreen = (type, args) => {
+    const msg = args.map(a => {
+      try {
+        return typeof a === 'object' ? JSON.stringify(a) : String(a);
+      } catch (e) {
+        return '[Circular]';
+      }
+    }).join(' ');
+
+    const line = document.createElement('div');
+    line.style.borderBottom = '1px solid #333';
+    line.style.color = type === 'error' ? '#f55' : (type === 'warn' ? '#fb0' : '#0f0');
+    line.innerText = `[${type}] ${msg}`;
+    debugDiv.appendChild(line);
+    debugDiv.scrollTop = debugDiv.scrollHeight;
+  };
+
+  const originalLog = console.log;
+  const originalWarn = console.warn;
+  const originalError = console.error;
+
+  console.log = (...args) => { originalLog(...args); logToScreen('log', args); };
+  console.warn = (...args) => { originalWarn(...args); logToScreen('warn', args); };
+  console.error = (...args) => { originalError(...args); logToScreen('error', args); };
+
+  window.onerror = (msg, url, line, col, error) => {
+    logToScreen('error', [`UNCATCHED: ${msg} @ ${line}:${col}`]);
+  };
+};
+
+initDebugger();
+console.log("System Initializing...");
+console.log("User Agent:", navigator.userAgent);
+// --------------------------------------------------------
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />

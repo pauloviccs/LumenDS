@@ -44,32 +44,32 @@ export default function PlayerView({ playlist }) {
     // We need to decide: Does the dashboard send the FILE itself or a URL?
     // Current Plan: Dashboard hosts a server.
     // We will assume 'item.url' is provided in the playlist json.
-    // Determine Source URL (Handle local tunnel vs remote)
-    let src = currentItem.url || currentItem.path;
+    // Determine Source URL
+    let src = currentItem.url; // Prefer Cloud URL
 
-    // Zero Cost Tunnel Logic:
-    // If it's a Windows absolute path, assume it's hosted by Dashboard on localhost
-    // FIXED: Do not blindly strip folders. Use relativePath if available.
+    // Fallback to Local Asset Server ONLY if:
+    // 1. No Cloud URL exists
+    // 2. AND we are running on localhost (Electron/Dev)
+    // This prevents "Local Network Access" prompts on public HTTPS deployments
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-    // Check if we already constructed a valid URL (e.g. from PlaylistCacheManager logic that might have updated properties? No, that updates cache)
-    // We must reconstruct logic here.
-
-    if (!currentItem.url) {
+    if (!src && isLocalhost) {
         if (currentItem.relativePath) {
             src = `http://localhost:11222/${currentItem.relativePath}`;
-        } else if (src && src.includes('Assets')) {
-            // Fallback for items imported before relativePath was added
-            let parts = src.split('Assets');
+        } else if (currentItem.path && currentItem.path.includes('Assets')) {
+            // Smart Fallback for Windows Paths
+            let parts = currentItem.path.split('Assets');
             if (parts.length > 1) {
                 let rel = parts.pop();
                 rel = rel.replace(/^[/\\]/, '').replace(/\\/g, '/');
                 src = `http://localhost:11222/${rel}`;
             }
-        } else if (src && (src.includes(':\\') || src.startsWith('/'))) {
-            // Absolute path without known 'Assets' anchor? 
-            // Fallback to filename (risky but matches old behavior)
-            const filename = src.split(/[/\\]/).pop();
+        } else if (currentItem.path && (currentItem.path.includes(':\\') || currentItem.path.startsWith('/'))) {
+            // Absolute path fallback
+            const filename = currentItem.path.split(/[/\\]/).pop();
             src = `http://localhost:11222/${filename}`;
+        } else if (currentItem.name) {
+            src = `http://localhost:11222/${currentItem.name}`;
         }
     }
 

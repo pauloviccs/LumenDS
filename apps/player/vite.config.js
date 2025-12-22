@@ -1,11 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import legacy from '@vitejs/plugin-legacy'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    legacy({
+      targets: ['defaults', 'chrome 60', 'safari 11', 'ios 11'], // Broad support for Smart TVs (~2017+)
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
@@ -61,6 +65,10 @@ export default defineConfig({
     })
   ],
   base: './',
+  build: {
+    target: 'es2015', // Transpile to ES2015 for older engines
+    minify: 'terser',
+  },
   server: {
     port: 3000,
   },

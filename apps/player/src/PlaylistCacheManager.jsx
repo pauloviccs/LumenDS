@@ -25,21 +25,19 @@ export default function PlaylistCacheManager({ playlist }) {
                     let src = item.url;
 
                     // Logic to determine the correct URL for the Local Asset Server
-                    if (!src) {
+                    // ONLY if on localhost
+                    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+                    if (!src && isLocalhost) {
                         if (item.relativePath) {
                             src = `http://localhost:11222/${item.relativePath}`;
                         } else if (item.path && item.path.includes('Assets')) {
-                            // Smart Fallback for Windows Paths: Try to find 'Assets' and get everything after
-                            // This fixes old playlist items that might not have relativePath saved yet
                             let parts = item.path.split('Assets');
                             if (parts.length > 1) {
-                                // parts[1] is everything after Assets, e.g. "\Olimpo\Video.mp4"
                                 let rel = parts.pop();
-                                // Normalize slashes
                                 rel = rel.replace(/^[/\\]/, '').replace(/\\/g, '/');
                                 src = `http://localhost:11222/${rel}`;
                             } else {
-                                // Fallback to filename only (legacy behavior, prone to conflicts)
                                 const filename = item.path.split(/[/\\]/).pop();
                                 src = `http://localhost:11222/${filename}`;
                             }

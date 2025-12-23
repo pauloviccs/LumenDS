@@ -24,3 +24,19 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 1s ease-in-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+}

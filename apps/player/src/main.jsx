@@ -148,6 +148,7 @@ const initDebugger = () => {
     pointer-events: none;
     white-space: pre-wrap;
     word-break: break-all;
+    display: none; /* Hidden by default */
   `;
   document.body.appendChild(debugDiv);
 
@@ -159,7 +160,7 @@ const initDebugger = () => {
     left: 10px;
     width: 32px;
     height: 32px;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 0, 0, 0.2); /* Red by default (hidden) */
     color: white;
     font-size: 20px;
     display: flex;

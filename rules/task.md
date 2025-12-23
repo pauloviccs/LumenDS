@@ -19,7 +19,7 @@
     - [ ] Canvas Overlay Editor (Text, Prices, Styling) <!-- id: 21 -->
 
 - [/] Web Player Development <!-- id: 14 -->
-    - [x] Fix Samsung TV Issues (Removed Debug Overlay) <!-- id: 35 -->
+    - [x] Fix Samsung TV Issues (Renamed Entry Point + SW Killer) <!-- id: 35 -->
     - [x] Basic Player Engine (Video/Image + Transitions) <!-- id: 15 -->
     - [x] Offline Support (Service Workers / Cache API) <!-- id: 16 -->
     - [x] Synchronization Logic (Polling/Sockets) <!-- id: 17 -->

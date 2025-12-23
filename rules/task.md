@@ -20,6 +20,7 @@
 
 - [/] Web Player Development <!-- id: 14 -->
     - [x] Fix Samsung TV Issues (Reset URL + Killer SW) <!-- id: 35 -->
+    - [x] Hide Cursor on TVs <!-- id: 36 -->
     - [x] Basic Player Engine (Video/Image + Transitions) <!-- id: 15 -->
     - [x] Offline Support (Service Workers / Cache API) <!-- id: 16 -->
     - [x] Synchronization Logic (Polling/Sockets) <!-- id: 17 -->

@@ -23,6 +23,11 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  cursor: none;
+  /* Hide cursor for immersion */
+  overflow: hidden;
+  /* Prevent scrollbars */
+  background-color: black;
 }
 
 @layer utilities {

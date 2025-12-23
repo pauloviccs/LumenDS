@@ -4,19 +4,10 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 const getMediaSrc = (item) => {
     if (!item) return '';
     let src = item.url;
+    // Simple localhost check to strip absolute paths if needed (legacy logic)
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
     if (!src && isLocalhost) {
-        if (item.relativePath) {
-            src = `http://localhost:11222/${item.relativePath}`;
-        } else if (item.path && item.path.includes('Assets')) {
-            let parts = item.path.split('Assets');
-            if (parts.length > 1) {
-                let rel = parts.pop();
-                rel = rel.replace(/^[/\\]/, '').replace(/\\/g, '/');
-                src = `http://localhost:11222/${rel}`;
-            }
-        } else if (item.path && (item.path.includes(':\\') || item.path.startsWith('/'))) {
+        if (item.path && (item.path.includes(':\\') || item.path.startsWith('/'))) {
             const filename = item.path.split(/[/\\]/).pop();
             src = `http://localhost:11222/${filename}`;
         } else if (item.name) {
@@ -27,20 +18,34 @@ const getMediaSrc = (item) => {
 };
 
 // Sub-component for rendering individual media item
-const MediaLayer = ({ item, className, onEnded, zIndex, onAutoplayError }) => {
+const MediaLayer = ({ item, isVisible, onEnded, zIndex, onAutoplayError }) => {
     const videoRef = useRef(null);
     const src = useMemo(() => getMediaSrc(item), [item]);
+    const [opacity, setOpacity] = useState(0);
+
+    // Fade-in Logic
+    useEffect(() => {
+        if (isVisible) {
+            // Small delay to ensure mount before transition
+            requestAnimationFrame(() => {
+                setOpacity(1);
+            });
+        } else {
+            setOpacity(0);
+        }
+    }, [isVisible]);
 
     useEffect(() => {
         // Handle Video Playback
         if (item?.type === 'video' && videoRef.current) {
             videoRef.current.currentTime = 0;
-            videoRef.current.muted = true; // Enforce muted!
+            // IMPORTANT: "muted" attribute in JSX is sometimes not enough for React re-renders
+            videoRef.current.muted = true;
 
             const playPromise = videoRef.current.play();
             if (playPromise !== undefined) {
                 playPromise.catch(e => {
-                    console.log("Autoplay blocked (interaction needed?):", e);
+                    console.error("Autoplay blocked (caught in MediaLayer):", e);
                     if (onAutoplayError) onAutoplayError();
                 });
             }
@@ -51,17 +56,22 @@ const MediaLayer = ({ item, className, onEnded, zIndex, onAutoplayError }) => {
 
     return (
         <div
-            className={`absolute inset-0 w-full h-full bg-black ${className || ''}`}
-            style={{ zIndex }}
+            className="absolute inset-0 w-full h-full bg-black transition-opacity duration-1000 ease-in-out"
+            style={{
+                zIndex,
+                opacity: isVisible ? opacity : 0 // Controlled opacity
+            }}
         >
             {item.type === 'video' ? (
                 <video
                     ref={videoRef}
                     src={src}
                     className="w-full h-full object-cover"
-                    muted
-                    playsInline
+                    muted={true} // Explicit JSX property
+                    autoPlay={true} // Try force autoplay
+                    playsInline={true}
                     onEnded={onEnded}
+                    onError={(e) => console.error("Video Load Error:", e)}
                 />
             ) : (
                 <img
@@ -78,12 +88,7 @@ export default function PlayerView({ playlist }) {
     const items = playlist?.items || [];
 
     // Logic: 
-    // We keep two layers: Active (Foreground) and Previous (Background).
-    // When changing items, we set Prev = Old Active, Active = New.
-    // The Active layer mounts with 'animate-fade-in' (opacity 0 -> 1).
-    // The Prev layer stays visible behind it (opacity 1).
-    // After 1s, we remove the Prev layer (set Prev = Active).
-
+    // Double Buffer: Active (1) and Previous (0).
     const [activeIndex, setActiveIndex] = useState(0);
     const [prevIndex, setPrevIndex] = useState(0);
     const [needsInteraction, setNeedsInteraction] = useState(false);
@@ -96,48 +101,43 @@ export default function PlayerView({ playlist }) {
     const triggerNext = () => {
         if (items.length <= 1) return;
 
-        setPrevIndex(activeIndex); // Keep current as background
-
+        setPrevIndex(activeIndex);
         const next = (activeIndex + 1) % items.length;
-        setActiveIndex(next); // Start fading in new one
+        setActiveIndex(next);
 
-        // Cleanup background after transition
+        // Cleanup background after transition (1.2s)
         setTimeout(() => {
             setPrevIndex(next);
-        }, 1200); // 1.2s to be safe (Anim is 1s)
+        }, 1200);
     };
 
     // Duration Timer for Images
     useEffect(() => {
         if (!activeItem) return;
 
-        // If activeItem is image, wait duration then next.
-        // If Active != Prev, we are transitioning, but the duration should count for the NEW item being shown.
-
         if (activeItem.type === 'image') {
             const duration = (activeItem.duration || 10) * 1000;
             timeoutRef.current = setTimeout(triggerNext, duration);
         }
-
         return () => clearTimeout(timeoutRef.current);
     }, [activeIndex, activeItem, items.length]);
 
     const handleVideoEnded = () => {
-        // Only trigger if this is the ACTIVE video ending
         triggerNext();
     };
 
     const handleAutoplayError = () => {
+        console.log("TRIGGERING TAP TO START OVERLAY");
         setNeedsInteraction(true);
     };
 
     const handleUserInteraction = () => {
+        console.log("User tapped screen. Retrying playback.");
         setNeedsInteraction(false);
-        // Attempt to play all videos (usually just the active one)
         const videos = document.querySelectorAll('video');
         videos.forEach(v => {
             v.muted = true;
-            v.play().catch(e => console.log("Retry play failed", e));
+            v.play().then(() => console.log("Retry success")).catch(e => console.error("Retry failed:", e));
         });
     };
 
@@ -150,25 +150,27 @@ export default function PlayerView({ playlist }) {
     }
 
     return (
-        <div className="bg-black w-full h-screen overflow-hidden relative">
+        <div className="bg-black w-full h-screen overflow-hidden relative" onClick={() => {
+            // Global click handler to unlock context just in case
+            if (needsInteraction) handleUserInteraction();
+        }}>
 
             {/* Background Layer (Previous Item) */}
-            {/* Only render if different, otherwise it's redundant/wasteful */}
             {prevIndex !== activeIndex && (
                 <MediaLayer
                     item={prevItem}
+                    isVisible={true} // Previous item stays visible (opacity 1) until unmounted/replaced
                     zIndex={0}
-                // No animation, just stays there
                 />
             )}
 
             {/* Foreground Layer (Active Item) */}
-            {/* Key needed to force remount and trigger animation */}
+            {/* Key forces remount, triggering opacity 0->1 transition */}
             <MediaLayer
                 key={activeIndex}
                 item={activeItem}
+                isVisible={true}
                 zIndex={10}
-                className="animate-fade-in"
                 onEnded={handleVideoEnded}
                 onAutoplayError={handleAutoplayError}
             />
@@ -176,13 +178,13 @@ export default function PlayerView({ playlist }) {
             {/* Interaction Overlay */}
             {needsInteraction && (
                 <div
-                    className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm cursor-pointer"
-                    onClick={handleUserInteraction}
+                    className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md cursor-pointer animation-pulse"
+                    style={{ pointerEvents: 'auto' }} // Ensure clickable
                 >
-                    <div className="text-center animate-pulse">
-                        <div className="text-6xl mb-4">👆</div>
-                        <h2 className="text-2xl font-bold text-white">Toque para Iniciar</h2>
-                        <p className="text-white/70">O som/vídeo foi bloqueado pelo navegador.</p>
+                    <div className="text-center">
+                        <div className="text-6xl mb-6 text-yellow-400">👆</div>
+                        <h2 className="text-4xl font-bold text-white mb-2">Toque para Iniciar</h2>
+                        <p className="text-xl text-gray-300">Necessário interação para ativar o som/vídeo</p>
                     </div>
                 </div>
             )}

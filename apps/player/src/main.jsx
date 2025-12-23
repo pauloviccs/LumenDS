@@ -151,6 +151,37 @@ const initDebugger = () => {
   `;
   document.body.appendChild(debugDiv);
 
+  const toggleBtn = document.createElement('div');
+  toggleBtn.innerText = '🐞';
+  toggleBtn.style.cssText = `
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    user-select: none;
+    backdrop-filter: blur(4px);
+  `;
+  toggleBtn.onclick = () => {
+    if (debugDiv.style.display === 'none') {
+      debugDiv.style.display = 'block';
+      toggleBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+    } else {
+      debugDiv.style.display = 'none';
+      toggleBtn.style.background = 'rgba(255, 0, 0, 0.2)';
+    }
+  };
+  document.body.appendChild(toggleBtn);
+
   const logToScreen = (type, args) => {
     const msg = args.map(a => {
       try {
@@ -165,7 +196,10 @@ const initDebugger = () => {
     line.style.color = type === 'error' ? '#f55' : (type === 'warn' ? '#fb0' : '#0f0');
     line.innerText = `[${type}] ${msg}`;
     debugDiv.appendChild(line);
-    debugDiv.scrollTop = debugDiv.scrollHeight;
+    // Auto-scroll only if visible to avoid layout trashing if hidden (optional optimization)
+    if (debugDiv.style.display !== 'none') {
+      debugDiv.scrollTop = debugDiv.scrollHeight;
+    }
   };
 
   const originalLog = console.log;

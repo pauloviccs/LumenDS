@@ -178,13 +178,16 @@ export default function PlayerView({ playlist }) {
             {/* Interaction Overlay */}
             {needsInteraction && (
                 <div
-                    className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md cursor-pointer animation-pulse"
-                    style={{ pointerEvents: 'auto' }} // Ensure clickable
+                    className="absolute inset-0 flex items-center justify-center bg-black/90 cursor-pointer"
+                    style={{ zIndex: 9999, pointerEvents: 'auto' }}
+                    onClick={handleUserInteraction}
                 >
+                    {console.log("RENDER: Rendering Interaction Overlay")}
                     <div className="text-center">
                         <div className="text-6xl mb-6 text-yellow-400">👆</div>
                         <h2 className="text-4xl font-bold text-white mb-2">Toque para Iniciar</h2>
                         <p className="text-xl text-gray-300">Necessário interação para ativar o som/vídeo</p>
+                        <button className="mt-4 px-6 py-2 bg-yellow-500 text-black font-bold rounded">INICIAR AGORA</button>
                     </div>
                 </div>
             )}

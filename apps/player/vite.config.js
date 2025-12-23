@@ -16,6 +16,12 @@ export default defineConfig({
   build: {
     target: ['chrome58', 'ios11'], // Force transpilation of optional chaining (added in Chrome 80)
     minify: 'terser',
+    rollupOptions: {
+      input: {
+        main: './index.html',
+        reset: './reset.html',
+      },
+    },
   },
   optimizeDeps: {
     esbuildOptions: {

@@ -136,13 +136,13 @@ const initDebugger = () => {
     position: fixed;
     top: 0;
     left: 0;
-    width: 300px;
+    width: 100%;
     height: 100vh;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.9);
     color: #0f0;
     font-family: monospace;
-    font-size: 10px;
-    padding: 10px;
+    font-size: 14px; /* Increased font size for TV readability */
+    padding: 20px;
     z-index: 9999;
     overflow-y: auto;
     pointer-events: none;

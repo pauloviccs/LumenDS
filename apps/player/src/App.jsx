@@ -157,7 +157,13 @@ export default function App() {
   };
 
   if (status === 'loading') {
-    return <div className="bg-black text-white h-screen flex items-center justify-center">Loading Player...</div>;
+    return (
+      <div className="bg-black text-white h-screen flex flex-col items-center justify-center gap-4">
+        <div className="text-2xl font-bold">LumenDS Player</div>
+        <div className="animate-pulse">Carregando Sistema...</div>
+        <div className="text-xs text-gray-500 font-mono mt-8">v1.1.0 (Build: {new Date().toISOString().split('T')[0]})</div>
+      </div>
+    );
   }
 
   if (status === 'pairing') {

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LumenDS - Dashboard Liquid Glass</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Montserrat & Inter per Design System -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Material Icons (Text-based icons, NO SVG) -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Chosen Palette: LumenDS Dark Liquid (Electric Blurple Accent) -->
+    <!-- Application Structure Plan: 
+         Structure: Dashboard layout with a fixed glass sidebar and a scrollable main content area.
+         Flow: Users land on the 'Overview' to see critical health metrics (Screens, Storage, Uptime). 
+         Navigation: Tabs allow switching between Management Views (Screens, Media, Playlists) without page reload.
+         Reasoning: This structure maximizes the "Glass" aesthetic by layering content panels over a unified animated mesh background, maintaining context while offering deep data exploration.
+    -->
+    <!-- Visualization & Content Choices:
+         1. Metrics Cards: Goal -> Instant Health Check. Method -> Glass panels with large typography. Interaction -> Hover glow.
+         2. Network Activity Chart: Goal -> Visualize traffic/uptime. Method -> Chart.js Line Chart (Curved, Gradient Fill). Interaction -> Tooltip on hover.
+         3. Screen Status List: Goal -> Manage devices. Method -> Table with Status Indicators. Interaction -> Filter buttons.
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Montserrat', 'sans-serif'],
+                    },
+                    colors: {
+                        lumen: {
+                            bg: '#050510',
+                            glass: 'rgba(20, 20, 30, 0.4)',
+                            border: 'rgba(255, 255, 255, 0.1)',
+                            accent: '#5E60CE', // Electric Blurple Start
+                            accentHover: '#6930C3', // Electric Blurple End
+                            textMain: 'rgba(255, 255, 255, 0.95)',
+                            textMuted: 'rgba(255, 255, 255, 0.6)',
+                            success: '#4ADE80',
+                            error: '#F87171',
+                            warning: '#FBBF24'
+                        }
+                    },
+                    backgroundImage: {
+                        'mesh-gradient': 'radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%)',
+                        'glass-sheen': 'linear-gradient(145deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.01) 100%)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Base Environment */
+        body {
+            background-color: #050510;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(94, 96, 206, 0.15) 0%, transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(105, 48, 195, 0.15) 0%, transparent 25%);
+            color: rgba(255, 255, 255, 0.9);
+            overflow-x: hidden;
+        }
+
+        /* The LumenDS "Liquid Glass" Class */
+        .liquid-card {
+            background: rgba(20, 20, 30, 0.4);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px); /* Safari support */
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 
+                0 8px 32px 0 rgba(0, 0, 0, 0.3),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .liquid-card:hover {
+            box-shadow: 
+                0 12px 40px 0 rgba(94, 96, 206, 0.2), /* Electric Blurple Glow */
+                inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            transform: translateY(-4px);
+            border-color: rgba(94, 96, 206, 0.3);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02); 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15); 
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25); 
+        }
+
+        /* Specific Chart Container overrides */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            max-height: 400px;
+            margin: 0 auto;
+        }
+
+        /* Animation utilities */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .nav-item.active {
+            background: rgba(94, 96, 206, 0.2);
+            color: #fff;
+            border-left: 3px solid #5E60CE;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased h-screen flex overflow-hidden selection:bg-lumen-accent selection:text-white">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 flex-shrink-0 z-20 flex flex-col liquid-card m-4 mr-0 h-[calc(100vh-2rem)]">
+        <!-- Logo Area -->
+        <div class="p-8 pb-4">
+            <h1 class="font-display font-bold text-2xl tracking-tighter text-white flex items-center gap-2">
+                <span class="material-icons-round text-lumen-accent">blur_on</span>
+                LumenDS
+            </h1>
+            <p class="text-xs font-display text-lumen-textMuted mt-1 tracking-widest uppercase ml-8">Digital Signage OS</p>
+        </div>
+
+        <!-- Nav Links -->
+        <nav class="flex-1 px-4 space-y-2 mt-6 overflow-y-auto">
+            <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-4 px-4 py-3 rounded-xl text-lumen-textMuted hover:text-white hover:bg-white/5 transition-all group">
+                <span class="material-icons-round group-hover:text-lumen-accent transition-colors">dashboard</span>
+                <span class="font-medium text-sm">Dashboard</span>
+            </button>
+            <button onclick="app.navigate('screens')" id="nav-screens" class="nav-item w-full flex items-center gap-4 px-4 py-3 rounded-xl text-lumen-textMuted hover:text-white hover:bg-white/5 transition-all group">
+                <span class="material-icons-round group-hover:text-lumen-accent transition-colors">monitor</span>
+                <span class="font-medium text-sm">Telas</span>
+            </button>
+            <button onclick="app.navigate('playlists')" id="nav-playlists" class="nav-item w-full flex items-center gap-4 px-4 py-3 rounded-xl text-lumen-textMuted hover:text-white hover:bg-white/5 transition-all group">
+                <span class="material-icons-round group-hover:text-lumen-accent transition-colors">playlist_play</span>
+                <span class="font-medium text-sm">Playlists</span>
+            </button>
+            <button onclick="app.navigate('assets')" id="nav-assets" class="nav-item w-full flex items-center gap-4 px-4 py-3 rounded-xl text-lumen-textMuted hover:text-white hover:bg-white/5 transition-all group">
+                <span class="material-icons-round group-hover:text-lumen-accent transition-colors">folder_open</span>
+                <span class="font-medium text-sm">Arquivos</span>
+            </button>
+        </nav>
+
+        <!-- User Profile (Bottom) -->
+        <div class="p-4 mt-auto">
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 cursor-pointer transition-colors">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-lumen-accent to-purple-800 flex items-center justify-center font-bold font-display shadow-lg shadow-lumen-accent/30">
+                    AD
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-white leading-none">Admin User</p>
+                    <p class="text-xs text-lumen-textMuted mt-1">Lumen Ent.</p>
+                </div>
+                <span class="material-icons-round text-lumen-textMuted ml-auto text-sm">settings</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        
+        <!-- Top Bar (Contextual) -->
+        <header class="h-20 flex items-center justify-between px-8 py-4 z-10">
+            <div>
+                <h2 id="page-title" class="text-2xl font-display font-bold text-white tracking-tight fade-in">Visão Geral</h2>
+                <p id="page-subtitle" class="text-sm text-lumen-textMuted fade-in delay-75">Status em tempo real da rede</p>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button class="w-10 h-10 rounded-full bg-lumen-glass flex items-center justify-center border border-lumen-border text-lumen-textMuted hover:text-white hover:bg-white/10 transition-all">
+                    <span class="material-icons-round">notifications</span>
+                </button>
+                <button class="bg-lumen-accent hover:bg-lumen-accentHover text-white px-5 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-lumen-accent/30 transition-all flex items-center gap-2">
+                    <span class="material-icons-round text-lg">add</span>
+                    Nova Playlist
+                </button>
+            </div>
+        </header>
+
+        <!-- Scrollable Content -->
+        <div id="content-area" class="flex-1 overflow-y-auto p-8 pt-0 pb-20 space-y-8">
+            
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="space-y-8 fade-in">
+                <!-- KPI Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- KPI 1 -->
+                    <div class="liquid-card p-6 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <span class="material-icons-round text-6xl">monitor</span>
+                        </div>
+                        <p class="text-sm font-medium text-lumen-textMuted uppercase tracking-wider">Telas Ativas</p>
+                        <div class="mt-2 flex items-baseline gap-2">
+                            <span class="text-4xl font-display font-bold text-white">42</span>
+                            <span class="text-sm text-lumen-success font-medium flex items-center">
+                                <span class="material-icons-round text-sm">arrow_upward</span> 3
+                            </span>
+                        </div>
+                        <div class="mt-4 w-full bg-white/10 h-1 rounded-full overflow-hidden">
+                            <div class="bg-lumen-success h-full w-[92%] shadow-[0_0_10px_rgba(74,222,128,0.5)]"></div>
+                        </div>
+                        <p class="text-xs text-lumen-textMuted mt-2">92% Online</p>
+                    </div>
+
+                    <!-- KPI 2 -->
+                    <div class="liquid-card p-6 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <span class="material-icons-round text-6xl">cloud_queue</span>
+                        </div>
+                        <p class="text-sm font-medium text-lumen-textMuted uppercase tracking-wider">Armazenamento</p>
+                        <div class="mt-2 flex items-baseline gap-2">
+                            <span class="text-4xl font-display font-bold text-white">128<span class="text-lg">GB</span></span>
+                        </div>
+                        <div class="mt-4 w-full bg-white/10 h-1 rounded-full overflow-hidden">
+                            <div class="bg-lumen-accent h-full w-[64%] shadow-[0_0_10px_rgba(94,96,206,0.5)]"></div>
+                        </div>
+                        <p class="text-xs text-lumen-textMuted mt-2">64% Utilizado</p>
+                    </div>
+
+                    <!-- KPI 3 -->
+                    <div class="liquid-card p-6 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <span class="material-icons-round text-6xl">playlist_play</span>
+                        </div>
+                        <p class="text-sm font-medium text-lumen-textMuted uppercase tracking-wider">Playlists</p>
+                        <div class="mt-2 flex items-baseline gap-2">
+                            <span class="text-4xl font-display font-bold text-white">15</span>
+                            <span class="text-sm text-lumen-textMuted">Ativas</span>
+                        </div>
+                        <div class="mt-4 w-full bg-white/10 h-1 rounded-full overflow-hidden">
+                            <div class="bg-lumen-warning h-full w-[80%]"></div>
+                        </div>
+                        <p class="text-xs text-lumen-textMuted mt-2">2 agendadas p/ hoje</p>
+                    </div>
+
+                    <!-- KPI 4 -->
+                    <div class="liquid-card p-6 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <span class="material-icons-round text-6xl">people</span>
+                        </div>
+                        <p class="text-sm font-medium text-lumen-textMuted uppercase tracking-wider">Impressões</p>
+                        <div class="mt-2 flex items-baseline gap-2">
+                            <span class="text-4xl font-display font-bold text-white">2.4<span class="text-lg">M</span></span>
+                            <span class="text-sm text-lumen-success font-medium flex items-center">
+                                <span class="material-icons-round text-sm">arrow_upward</span> 12%
+                            </span>
+                        </div>
+                        <div class="mt-4 w-full bg-white/10 h-1 rounded-full overflow-hidden">
+                            <div class="bg-blue-400 h-full w-[100%]"></div>
+                        </div>
+                        <p class="text-xs text-lumen-textMuted mt-2">Últimos 30 dias</p>
+                    </div>
+                </div>
+
+                <!-- Main Chart Section -->
+                <div class="liquid-card p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="font-display font-bold text-lg text-white">Atividade da Rede</h3>
+                            <p class="text-sm text-lumen-textMuted">Status de players e requisições de mídia nas últimas 24h</p>
+                        </div>
+                        <div class="flex bg-white/5 rounded-lg p-1 border border-white/5">
+                            <button class="px-3 py-1 rounded-md text-xs font-medium bg-white/10 text-white shadow-sm">24h</button>
+                            <button class="px-3 py-1 rounded-md text-xs font-medium text-lumen-textMuted hover:text-white transition-colors">7d</button>
+                            <button class="px-3 py-1 rounded-md text-xs font-medium text-lumen-textMuted hover:text-white transition-colors">30d</button>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="networkChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Activity List (Contextual Data) -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Status List -->
+                    <div class="col-span-2 liquid-card p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-display font-bold text-lg text-white">Telas Recentes</h3>
+                            <button class="text-xs text-lumen-accent hover:text-white transition-colors font-medium">Ver todas</button>
+                        </div>
+                        <div class="space-y-3">
+                            <!-- List Item 1 -->
+                            <div class="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-lumen-success shadow-[0_0_8px_#4ADE80]"></div>
+                                    <div>
+                                        <p class="text-sm font-bold text-white">Recepção Hall A</p>
+                                        <p class="text-xs text-lumen-textMuted">LG WebOS • 192.168.0.104</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs font-medium text-white">Playlist: Institucional V2</p>
+                                    <p class="text-xs text-lumen-textMuted">Online há 4d</p>
+                                </div>
+                            </div>
+                            <!-- List Item 2 -->
+                            <div class="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-lumen-success shadow-[0_0_8px_#4ADE80]"></div>
+                                    <div>
+                                        <p class="text-sm font-bold text-white">Cafeteria Menu Board</p>
+                                        <p class="text-xs text-lumen-textMuted">Android TV • 192.168.0.105</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs font-medium text-white">Playlist: Promo Café</p>
+                                    <p class="text-xs text-lumen-textMuted">Online há 2h</p>
+                                </div>
+                            </div>
+                            <!-- List Item 3 -->
+                            <div class="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-lumen-error shadow-[0_0_8px_#F87171]"></div>
+                                    <div>
+                                        <p class="text-sm font-bold text-white">Corredor Norte</p>
+                                        <p class="text-xs text-lumen-textMuted">Samsung Tizen • 192.168.0.110</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs font-medium text-white">Playlist: Padrão</p>
+                                    <p class="text-xs text-lumen-error">Sem sinal (15m)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Health -->
+                    <div class="liquid-card p-6 flex flex-col justify-center items-center text-center">
+                        <div class="w-32 h-32 rounded-full border-4 border-lumen-accent/30 flex items-center justify-center relative">
+                            <div class="absolute inset-0 rounded-full border-4 border-lumen-accent border-t-transparent animate-spin" style="animation-duration: 3s;"></div>
+                            <div>
+                                <p class="text-3xl font-display font-bold text-white">98%</p>
+                                <p class="text-xs text-lumen-textMuted">Saúde</p>
+                            </div>
+                        </div>
+                        <h3 class="mt-6 font-bold text-white">Sistema Operacional</h3>
+                        <p class="text-sm text-lumen-textMuted mt-1">Todos os serviços rodando normalmente.</p>
+                        <button class="mt-4 w-full py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-medium text-white transition-colors border border-white/5">
+                            Ver Logs
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screens View (Placeholder for interactivity demonstration) -->
+            <div id="view-screens" class="hidden space-y-8 fade-in">
+                <div class="liquid-card p-8 text-center">
+                    <span class="material-icons-round text-6xl text-lumen-textMuted mb-4">monitor</span>
+                    <h3 class="text-xl font-bold text-white">Gerenciamento de Telas</h3>
+                    <p class="text-lumen-textMuted">Interface de Grade de Telas viria aqui.</p>
+                </div>
+            </div>
+
+             <!-- Playlists View (Placeholder) -->
+             <div id="view-playlists" class="hidden space-y-8 fade-in">
+                <div class="liquid-card p-8 text-center">
+                    <span class="material-icons-round text-6xl text-lumen-textMuted mb-4">playlist_play</span>
+                    <h3 class="text-xl font-bold text-white">Editor de Playlists</h3>
+                    <p class="text-lumen-textMuted">O Drag & Drop de playlists seria carregado aqui.</p>
+                </div>
+            </div>
+
+             <!-- Assets View (Placeholder) -->
+             <div id="view-assets" class="hidden space-y-8 fade-in">
+                <div class="liquid-card p-8 text-center">
+                    <span class="material-icons-round text-6xl text-lumen-textMuted mb-4">folder_open</span>
+                    <h3 class="text-xl font-bold text-white">Gerenciador de Mídia</h3>
+                    <p class="text-lumen-textMuted">Visualização de grid de imagens/vídeos aqui.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Application Logic
+        const app = {
+            state: {
+                currentView: 'dashboard'
+            },
+            
+            // Initialization
+            init: function() {
+                this.setupChart();
+                this.updateNav();
+            },
+
+            // Navigation Handler
+            navigate: function(viewId) {
+                // Hide all views
+                document.querySelectorAll('#content-area > div').forEach(el => {
+                    el.classList.add('hidden');
+                });
+                
+                // Show selected view
+                const selectedView = document.getElementById(`view-${viewId}`);
+                if(selectedView) {
+                    selectedView.classList.remove('hidden');
+                    // Retrigger animation
+                    selectedView.classList.remove('fade-in');
+                    void selectedView.offsetWidth; // trigger reflow
+                    selectedView.classList.add('fade-in');
+                }
+
+                // Update Header Text
+                const titles = {
+                    'dashboard': ['Visão Geral', 'Status em tempo real da rede'],
+                    'screens': ['Telas', 'Gerencie seus dispositivos conectados'],
+                    'playlists': ['Playlists', 'Crie e organize sua programação'],
+                    'assets': ['Arquivos', 'Upload e gerenciamento de mídia']
+                };
+                
+                document.getElementById('page-title').innerText = titles[viewId][0];
+                document.getElementById('page-subtitle').innerText = titles[viewId][1];
+
+                this.state.currentView = viewId;
+                this.updateNav();
+            },
+
+            // Update Navigation Styles
+            updateNav: function() {
+                document.querySelectorAll('.nav-item').forEach(el => {
+                    el.classList.remove('active');
+                });
+                document.getElementById(`nav-${this.state.currentView}`).classList.add('active');
+            },
+
+            // Chart Configuration (Chart.js)
+            setupChart: function() {
+                const ctx = document.getElementById('networkChart').getContext('2d');
+                
+                // Gradient for the line
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(94, 96, 206, 0.5)'); // Lumen Accent Start
+                gradient.addColorStop(1, 'rgba(94, 96, 206, 0)');
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '23:59'],
+                        datasets: [{
+                            label: 'Requisições (MB/s)',
+                            data: [12, 19, 45, 80, 75, 55, 30],
+                            borderColor: '#5E60CE',
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#5E60CE',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: true,
+                            tension: 0.4 // Smooth curves
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(20, 20, 30, 0.9)',
+                                titleColor: '#fff',
+                                bodyColor: 'rgba(255, 255, 255, 0.7)',
+                                borderColor: 'rgba(255, 255, 255, 0.1)',
+                                borderWidth: 1,
+                                padding: 12,
+                                displayColors: false,
+                                titleFont: { family: 'Montserrat', size: 14 },
+                                bodyFont: { family: 'Inter', size: 12 }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.05)',
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 0.5)',
+                                    font: { family: 'Inter' }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 0.5)',
+                                    font: { family: 'Inter' }
+                                }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index',
+                        },
+                    }
+                });
+            }
+        };
+
+        // Initialize App on Load
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+    </script>
+</body>
+</html>

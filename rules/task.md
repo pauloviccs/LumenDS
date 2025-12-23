@@ -18,7 +18,8 @@
     - [x] Screen Manager (Status, Assign Playlists) <!-- id: 13 -->
     - [ ] Canvas Overlay Editor (Text, Prices, Styling) <!-- id: 21 -->
 
-    - [/] Web Player Development <!-- id: 14 -->
+- [/] Web Player Development <!-- id: 14 -->
+    - [/] Fix Samsung TV Issues (Debug & Auto-Update) <!-- id: 35 -->
     - [x] Basic Player Engine (Video/Image + Transitions) <!-- id: 15 -->
     - [x] Offline Support (Service Workers / Cache API) <!-- id: 16 -->
     - [x] Synchronization Logic (Polling/Sockets) <!-- id: 17 -->
@@ -29,7 +30,7 @@
     - [x] Add/Remove Media in Playlist <!-- id: 25 -->
     - [x] Assign Playlist to Screen <!-- id: 26 -->
 
-- [x] Verification & Polish <!-- id: 18 -->
+- [/] Verification & Polish <!-- id: 18 -->
     - [x] Test Loop & Realtime Updates <!-- id: 27 -->
 
 - [ ] Authentication & Security <!-- id: 28 -->
@@ -37,6 +38,3 @@
     - [ ] Route Protection (AuthGuard) <!-- id: 30 -->
     - [x] Secure RLS Policies (User Scoped) <!-- id: 31 -->
     - [x] Public Access for Player (Read-Only) <!-- id: 32 -->
-
-- [ ] New Features <!-- id: 33 -->
-    - [ ] Offline Support (PWA + Cache) <!-- id: 34 -->

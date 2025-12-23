@@ -136,13 +136,13 @@ const initDebugger = () => {
     position: fixed;
     top: 0;
     left: 0;
-    width: 300px;
+    width: 100%;
     height: 100vh;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.9);
     color: #0f0;
     font-family: monospace;
-    font-size: 10px;
-    padding: 10px;
+    font-size: 14px; /* Increased font size for TV readability */
+    padding: 20px;
     z-index: 9999;
     overflow-y: auto;
     pointer-events: none;
@@ -152,33 +152,34 @@ const initDebugger = () => {
   `;
   document.body.appendChild(debugDiv);
 
-  const toggleBtn = document.createElement('div');
-  toggleBtn.innerText = '🐞';
+  // FIXED: Moved to Top-Right to avoid TV Overscan and Bottom Bars conflicts
+  // Increased size and visibility for easier TV remote navigation
   toggleBtn.style.cssText = `
     position: fixed;
-    bottom: 10px;
-    left: 10px;
-    width: 32px;
-    height: 32px;
-    background: rgba(255, 0, 0, 0.2); /* Red by default (hidden) */
+    top: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 0, 0, 0.6); 
     color: white;
-    font-size: 20px;
+    font-size: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
     cursor: pointer;
-    z-index: 10000;
+    z-index: 2147483647; /* Max Z-Index possible */
     user-select: none;
     backdrop-filter: blur(4px);
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
   `;
   toggleBtn.onclick = () => {
     if (debugDiv.style.display === 'none') {
       debugDiv.style.display = 'block';
-      toggleBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+      toggleBtn.style.background = 'rgba(255, 255, 255, 0.4)';
     } else {
       debugDiv.style.display = 'none';
-      toggleBtn.style.background = 'rgba(255, 0, 0, 0.2)';
+      toggleBtn.style.background = 'rgba(255, 0, 0, 0.6)';
     }
   };
   document.body.appendChild(toggleBtn);
@@ -219,6 +220,16 @@ const initDebugger = () => {
     logToScreen('error', [`UNHANDLED REJECTION: ${event.reason ? event.reason.toString() : event.reason}`]);
   };
 };
+
+// 3. Auto-Update Logic on Re-Open
+// When the app comes back from background (or is reopened), force a reload to get fresh assets.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    console.log("App resumed. Checking for updates by reloading...");
+    // Force reload to bypass potential stale cache in long-running TV instances
+    window.location.reload();
+  }
+});
 
 initDebugger();
 console.log("System Initializing...");

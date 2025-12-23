@@ -154,6 +154,9 @@ const initDebugger = () => {
 
   // FIXED: Moved to Top-Right to avoid TV Overscan and Bottom Bars conflicts
   // Increased size and visibility for easier TV remote navigation
+  const toggleBtn = document.createElement('div');
+  toggleBtn.innerText = '🐞';
+
   toggleBtn.style.cssText = `
     position: fixed;
     top: 30px;

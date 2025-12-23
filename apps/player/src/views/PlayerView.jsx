@@ -34,8 +34,17 @@ export default function PlayerView({ playlist }) {
     const src = useMemo(() => getMediaSrc(activeItem), [activeItem]);
 
     const nextItem = () => {
-        if (items.length <= 1) return;
-        setCurrentIndex((prev) => (prev + 1) % items.length);
+        // Handle single-item playlist looping (specifically for video)
+        if (items.length === 1 && activeItem?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(e => console.error("Loop Error:", e));
+            return;
+        }
+
+        // Standard playlist navigation
+        if (items.length > 1) {
+            setCurrentIndex((prev) => (prev + 1) % items.length);
+        }
     };
 
     // Effect: Handle Video Playback & Image Duration

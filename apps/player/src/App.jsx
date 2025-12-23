@@ -27,7 +27,45 @@ export default function App() {
       setDebugError(`Unhandled Rejection: ${event.reason}`);
     });
 
+    const enterFullScreen = () => {
+      const doc = window.document;
+      const docEl = doc.documentElement;
+
+      const requestFullScreen =
+        docEl.requestFullscreen ||
+        docEl.mozRequestFullScreen ||
+        docEl.webkitRequestFullScreen ||
+        docEl.msRequestFullscreen;
+
+      if (requestFullScreen) {
+        requestFullScreen.call(docEl).catch((err) => {
+          console.log("Fullscreen blocked (normal behavior if no gesture):", err);
+        });
+      }
+    };
+
+    // Attempt immediately (works on some TVs/Kiosks)
+    enterFullScreen();
+
+    // Attempt on any user interaction (required by most browsers)
+    const handleInteraction = () => {
+      enterFullScreen();
+      // Optional: Remove listeners after success if desired, but keeping them ensures
+      // we go back to FS if the user escaped.
+    };
+
+    window.addEventListener('click', handleInteraction);
+    window.addEventListener('touchstart', handleInteraction);
+    window.addEventListener('keydown', handleInteraction);
+
     initializePlayer();
+
+    return () => {
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+      window.removeEventListener('keydown', handleInteraction);
+      window.onerror = null;
+    };
   }, []);
 
   const initializePlayer = async () => {

@@ -8,6 +8,13 @@ if ('serviceWorker' in navigator) {
       console.log('Force Unregistering Stale SW:', registration);
       registration.unregister();
     }
+    // Also clear Cache Storage API
+    caches.keys().then(function (names) {
+      for (let name of names) {
+        console.log('Deleting Cache:', name);
+        caches.delete(name);
+      }
+    });
   }).catch(err => console.error("SW Unregister Fail:", err));
 }
 // --------------------------------------------------------

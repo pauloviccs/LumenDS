@@ -53,10 +53,14 @@ export default function PlaylistCacheManager({ playlist }) {
                         const match = await cache.match(src);
                         if (!match) {
                             console.log(`Caching: ${src}`);
-                            await cache.add(src);
+                            const response = await fetch(src);
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+                            }
+                            await cache.put(src, response);
                         }
                     } catch (err) {
-                        console.error(`Failed to cache ${src}`, err);
+                        console.error(`Failed to cache ${src}`, err.message || err);
                     }
 
                     cachedCount++;

@@ -125,105 +125,6 @@ function App() {
   return <div className="bg-black h-screen w-full flex items-center justify-center text-white">Carregando...</div>;
 }
 
-// --------------------------------------------------------
-// CRITICAL TV DEBUGGER
-// Hijack console to show on screen (WebOS has no devtools)
-// --------------------------------------------------------
-const initDebugger = () => {
-  const debugDiv = document.createElement('div');
-  debugDiv.id = 'debug-console';
-  debugDiv.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    background: rgba(0,0,0,0.9);
-    color: #0f0;
-    font-family: monospace;
-    font-size: 14px; /* Increased font size for TV readability */
-    padding: 20px;
-    z-index: 9999;
-    overflow-y: auto;
-    pointer-events: none;
-    white-space: pre-wrap;
-    word-break: break-all;
-    display: none; /* Hidden by default */
-  `;
-  document.body.appendChild(debugDiv);
-
-  // FIXED: Moved to Top-Right to avoid TV Overscan and Bottom Bars conflicts
-  // Increased size and visibility for easier TV remote navigation
-  const toggleBtn = document.createElement('div');
-  toggleBtn.innerText = '🐞';
-
-  toggleBtn.style.cssText = `
-    position: fixed;
-    top: 30px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    background: rgba(255, 0, 0, 0.6); 
-    color: white;
-    font-size: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 2147483647; /* Max Z-Index possible */
-    user-select: none;
-    backdrop-filter: blur(4px);
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-  `;
-  toggleBtn.onclick = () => {
-    if (debugDiv.style.display === 'none') {
-      debugDiv.style.display = 'block';
-      toggleBtn.style.background = 'rgba(255, 255, 255, 0.4)';
-    } else {
-      debugDiv.style.display = 'none';
-      toggleBtn.style.background = 'rgba(255, 0, 0, 0.6)';
-    }
-  };
-  document.body.appendChild(toggleBtn);
-
-  const logToScreen = (type, args) => {
-    const msg = args.map(a => {
-      try {
-        return typeof a === 'object' ? JSON.stringify(a) : String(a);
-      } catch (e) {
-        return '[Circular]';
-      }
-    }).join(' ');
-
-    const line = document.createElement('div');
-    line.style.borderBottom = '1px solid #333';
-    line.style.color = type === 'error' ? '#f55' : (type === 'warn' ? '#fb0' : '#0f0');
-    line.innerText = `[${type}] ${msg}`;
-    debugDiv.appendChild(line);
-    // Auto-scroll only if visible to avoid layout trashing if hidden (optional optimization)
-    if (debugDiv.style.display !== 'none') {
-      debugDiv.scrollTop = debugDiv.scrollHeight;
-    }
-  };
-
-  const originalLog = console.log;
-  const originalWarn = console.warn;
-  const originalError = console.error;
-
-  console.log = (...args) => { originalLog(...args); logToScreen('log', args); };
-  console.warn = (...args) => { originalWarn(...args); logToScreen('warn', args); };
-  console.error = (...args) => { originalError(...args); logToScreen('error', args); };
-
-  window.onerror = (msg, url, line, col, error) => {
-    logToScreen('error', [`UNCATCHED: ${msg} @ ${line}:${col}`]);
-  };
-
-  window.onunhandledrejection = (event) => {
-    logToScreen('error', [`UNHANDLED REJECTION: ${event.reason ? event.reason.toString() : event.reason}`]);
-  };
-};
-
 // 3. Auto-Update Logic on Re-Open
 // When the app comes back from background (or is reopened), force a reload to get fresh assets.
 document.addEventListener('visibilitychange', () => {
@@ -234,7 +135,9 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-initDebugger();
+console.log("System Initializing...");
+console.log("User Agent:", navigator.userAgent);
+// --------------------------------------------------------
 console.log("System Initializing...");
 console.log("User Agent:", navigator.userAgent);
 // --------------------------------------------------------

@@ -1,6 +1,17 @@
 import 'core-js/stable';
 import React, { useState, useEffect } from 'react';
 
+// --- SERVICE WORKER KILLER (Fix for Samsung TV Cache) ---
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function (registrations) {
+    for (let registration of registrations) {
+      console.log('Force Unregistering Stale SW:', registration);
+      registration.unregister();
+    }
+  }).catch(err => console.error("SW Unregister Fail:", err));
+}
+// --------------------------------------------------------
+
 // Polyfill for crypto.randomUUID (Chrome 79 / WebOS 5.0 missing feature)
 if (!crypto.randomUUID) {
   console.log('[Polyfill] Applying crypto.randomUUID polyfill');

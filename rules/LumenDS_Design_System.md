@@ -52,20 +52,3 @@ This is the building block of LumenDS.
 * **Backdrop Filter:** `blur(40px)` (Heavy blur is key for the "thick glass" look).
 * **Saturate:** `saturate(180%)` (Boosts the colors behind the glass).
 * **Border:** 1px solid, but with a gradient opacity (top-left bright, bottom-right invisible).
-
-<!-- **CSS Logic:**
-```css
-.liquid-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(40px) saturate(150%);
-  -webkit-backdrop-filter: blur(40px) saturate(150%);
-  border-radius: 28px;
-  
-  /* The "Liquid" Edge Effect */
-  box-shadow: 
-    inset 0px 0px 0px 1px rgba(255, 255, 255, 0.2), /* Inner light rim */
-    0px 20px 40px rgba(0, 0, 0, 0.2); /* Deep soft shadow */
-    
-  border-top: 1px solid rgba(255, 255, 255, 0.4); /* Specular highlight */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-} -->

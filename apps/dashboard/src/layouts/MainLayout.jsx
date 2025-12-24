@@ -1,153 +1,203 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-// Using Ionicons 5 for that authentic iOS feel (Filled/Sharp variants)
-import {
-    IoHome,
-    IoFolderOpen,
-    IoList,
-    IoDesktop,
-    IoSettingsSharp,
-    IoLogOutOutline,
-    IoMenu,
-    IoClose
-} from 'react-icons/io5';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import PlaylistsView from '../views/PlaylistsView.jsx';
 import MediaView from '../views/MediaView.jsx';
 import ScreensView from '../views/ScreensView.jsx';
 import SettingsView from '../views/SettingsView.jsx';
+import DashboardView from '../views/DashboardView.jsx';
 
-const MenuItem = ({ icon: Icon, label, isActive, onClick }) => (
-    <motion.button
-        onClick={onClick}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className={`w-full flex items-center space-x-4 px-6 py-4 rounded-[25px] transition-all duration-300 font-medium text-lg
-      ${isActive
-                ? 'bg-electric-blurple text-white shadow-[0_0_20px_#5E60CE]'
-                : 'text-white/60 hover:text-white hover:bg-white/10'
-            }`}
-    >
-        <Icon size={24} />
-        <span>{label}</span>
-    </motion.button>
-);
+import {
+    LayoutDashboard,
+    Monitor,
+    ListVideo,
+    FolderOpen,
+    Settings,
+    LogOut,
+    Command,
+    Bell,
+    Plus
+} from 'lucide-react';
 
 export default function MainLayout() {
-    const [activeTab, setActiveTab] = React.useState('screens');
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('dashboard');
+    const [user, setUser] = useState(null);
 
-    const handleLogout = async () => {
-        await supabase.auth.signOut();
-    };
+    useEffect(() => {
+        // Get initial user
+        supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+
+        // Listen for changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
 
     const handleNavigate = (tab) => {
         setActiveTab(tab);
-        setIsMenuOpen(false);
+    };
+
+    const getHeaderInfo = () => {
+        switch (activeTab) {
+            case 'dashboard': return { title: 'Visão Geral', subtitle: 'Status em tempo real da rede' };
+            case 'media': return { title: 'Arquivos', subtitle: 'Upload e gerenciamento de mídia' };
+            case 'playlists': return { title: 'Playlists', subtitle: 'Crie e organize sua programação' };
+            case 'screens': return { title: 'Telas', subtitle: 'Gerencie seus dispositivos conectados' };
+            case 'settings': return { title: 'Ajustes', subtitle: 'Configurações do sistema' };
+            default: return { title: 'LumenDS', subtitle: '' };
+        }
     };
 
     const renderContent = () => {
         switch (activeTab) {
-            case 'home': return <div className="text-white p-10 font-header text-3xl font-bold">Visão Geral</div>;
+            case 'dashboard': return <DashboardView />;
             case 'media': return <MediaView />;
             case 'playlists': return <PlaylistsView />;
             case 'screens': return <ScreensView />;
             case 'settings': return <SettingsView />;
-            default: return <div className="text-white">404</div>;
+            default: return <DashboardView />;
         }
     };
 
+    const { title, subtitle } = getHeaderInfo();
+
     return (
-        <div className="flex h-screen w-full overflow-hidden relative font-sans text-white bg-black">
-            {/* Background Animation */}
+        <div className="font-sans antialiased h-screen flex overflow-hidden selection:bg-lumen-accent selection:text-white relative text-white">
+            {/* Global Liquid Background */}
             <div className="liquid-bg" />
 
-            {/* Top Bar (Floating Dynamic Island feel) */}
-            <div className="absolute top-0 left-0 right-0 z-50 p-6 flex items-center justify-between pointer-events-none">
-                <div className="pointer-events-auto">
-                    <motion.button
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => setIsMenuOpen(true)}
-                        className="w-14 h-14 bg-white/10 backdrop-blur-xl border border-white/20 rounded-[22px] flex items-center justify-center shadow-2xl hover:bg-white/20 transition-colors"
-                    >
-                        <IoMenu size={28} className="text-white" />
-                    </motion.button>
+            {/* Sidebar Navigation */}
+            <aside className="w-64 flex-shrink-0 z-20 flex flex-col liquid-card m-4 mr-0 h-[calc(100vh-2rem)] border-white/10 bg-black/40">
+                {/* Logo Area */}
+                <div className="p-8 pb-4">
+                    <h1 className="font-display font-bold text-2xl tracking-tighter text-white flex items-center gap-3">
+                        <div className="p-1.5 rounded-lg bg-lumen-accent/20">
+                            <Command className="w-6 h-6 text-lumen-accent" />
+                        </div>
+                        LumenDS
+                    </h1>
+                    <p className="text-[10px] font-bold text-white/40 mt-2 tracking-[0.2em] uppercase ml-11">Digital Signage OS</p>
                 </div>
 
-                <div className="flex items-center space-x-4 pointer-events-auto">
-                    <span className="px-4 py-2 bg-black/40 backdrop-blur-lg rounded-[14px] border border-white/10 text-xs font-bold uppercase tracking-widest text-white/50">
-                        LumenDS Studio
-                    </span>
-                </div>
-            </div>
+                {/* Nav Links */}
+                <nav className="flex-1 px-4 space-y-2 mt-6 overflow-y-auto custom-scrollbar">
+                    <NavButton
+                        id="dashboard"
+                        icon={<LayoutDashboard size={20} />}
+                        label="Dashboard"
+                        active={activeTab === 'dashboard'}
+                        onClick={() => handleNavigate('dashboard')}
+                    />
+                    <NavButton
+                        id="screens"
+                        icon={<Monitor size={20} />}
+                        label="Telas"
+                        active={activeTab === 'screens'}
+                        onClick={() => handleNavigate('screens')}
+                    />
+                    <NavButton
+                        id="playlists"
+                        icon={<ListVideo size={20} />}
+                        label="Playlists"
+                        active={activeTab === 'playlists'}
+                        onClick={() => handleNavigate('playlists')}
+                    />
+                    <NavButton
+                        id="media"
+                        icon={<FolderOpen size={20} />}
+                        label="Arquivos"
+                        active={activeTab === 'media'}
+                        onClick={() => handleNavigate('media')}
+                    />
 
-            {/* Content Area - Full Screen */}
-            <main className="flex-1 h-full pt-28 px-4 pb-4 overflow-y-auto custom-scrollbar">
-                <div className="max-w-[1800px] mx-auto h-full">
+                    <div className="my-4 border-t border-white/5 mx-4"></div>
+
+                    <NavButton
+                        id="settings"
+                        icon={<Settings size={20} />}
+                        label="Ajustes"
+                        active={activeTab === 'settings'}
+                        onClick={() => handleNavigate('settings')}
+                    />
+                </nav>
+
+                {/* User Profile (Bottom) */}
+                <div className="p-4 mt-auto">
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 cursor-pointer transition-colors group">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-lumen-accent to-purple-800 flex items-center justify-center font-bold font-display shadow-lg shadow-lumen-accent/30 group-hover:scale-110 transition-transform">
+                            {user?.email?.[0].toUpperCase() || 'A'}
+                        </div>
+                        <div className="overflow-hidden min-w-0">
+                            <p className="text-sm font-bold text-white leading-none truncate">{user?.email?.split('@')[0] || 'Admin'}</p>
+                            <p className="text-xs text-lumen-success mt-1 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-lumen-success animate-pulse"></span>
+                                Online
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => supabase.auth.signOut()}
+                            className="text-white/40 ml-auto hover:text-lumen-error transition-colors p-2 rounded-lg hover:bg-white/5"
+                            title="Sair"
+                        >
+                            <LogOut size={18} />
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10 w-full">
+
+                {/* Top Bar (Contextual) */}
+                <header className="h-20 flex-shrink-0 flex items-center justify-between px-8 py-4 z-10">
+                    <div>
+                        <h2 className="text-2xl font-display font-bold text-white tracking-tight animate-fade-in">{title}</h2>
+                        <p className="text-sm text-lumen-textMuted animate-fade-in" style={{ animationDelay: '75ms' }}>{subtitle}</p>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <button className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-lumen-textMuted hover:text-white hover:bg-white/10 transition-all cursor-not-allowed opacity-50">
+                            <Bell size={20} />
+                        </button>
+                        {activeTab !== 'playlists' && (
+                            <button
+                                onClick={() => setActiveTab('playlists')}
+                                className="btn-primary-glow flex items-center gap-2 px-5 py-2.5 text-sm"
+                            >
+                                <Plus size={18} />
+                                <span>Nova Playlist</span>
+                            </button>
+                        )}
+                    </div>
+                </header>
+
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-8 pt-0 pb-20">
                     {renderContent()}
                 </div>
             </main>
-
-            {/* Dropdown Menu Overlay */}
-            <AnimatePresence>
-                {isMenuOpen && (
-                    <>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsMenuOpen(false)}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-                        />
-                        <motion.div
-                            initial={{ x: -300, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: -300, opacity: 0 }}
-                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                            className="fixed top-4 left-4 bottom-4 w-[320px] bg-[#0a0a0a]/80 backdrop-blur-2xl border border-white/10 rounded-[40px] z-50 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col p-8"
-                        >
-                            <div className="flex items-center justify-between mb-10">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-white/5 rounded-[18px] flex items-center justify-center border border-white/10 shadow-inner">
-                                        <IoDesktop size={24} className="text-electric-blurple" />
-                                    </div>
-                                    <div>
-                                        <span className="font-header font-bold text-2xl block leading-none">Menu</span>
-                                        <span className="text-xs text-white/30 font-medium tracking-wider uppercase">Navegação</span>
-                                    </div>
-                                </div>
-                                <motion.button
-                                    whileTap={{ scale: 0.9 }}
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="p-2 bg-white/10 rounded-full hover:bg-white/20 text-white/60 hover:text-white transition-colors"
-                                >
-                                    <IoClose size={24} />
-                                </motion.button>
-                            </div>
-
-                            <nav className="flex-1 space-y-2">
-                                <MenuItem label="Visão Geral" icon={IoHome} isActive={activeTab === 'home'} onClick={() => handleNavigate('home')} />
-                                <div className="h-px bg-white/5 my-4 mx-4"></div>
-                                <MenuItem label="Mídia" icon={IoFolderOpen} isActive={activeTab === 'media'} onClick={() => handleNavigate('media')} />
-                                <MenuItem label="Playlists" icon={IoList} isActive={activeTab === 'playlists'} onClick={() => handleNavigate('playlists')} />
-                                <MenuItem label="Telas" icon={IoDesktop} isActive={activeTab === 'screens'} onClick={() => handleNavigate('screens')} />
-                            </nav>
-
-                            <div className="mt-auto space-y-2">
-                                <div className="h-px bg-white/5 my-4 mx-4"></div>
-                                <MenuItem label="Ajustes" icon={IoSettingsSharp} isActive={activeTab === 'settings'} onClick={() => handleNavigate('settings')} />
-                                <button
-                                    onClick={handleLogout}
-                                    className="w-full flex items-center space-x-4 px-6 py-4 rounded-[25px] transition-all duration-300 font-medium text-lg text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                                >
-                                    <IoLogOutOutline size={24} />
-                                    <span>Sair</span>
-                                </button>
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
         </div>
+    );
+}
+
+// Sub-component for Nav Buttons
+function NavButton({ id, icon, label, active, onClick }) {
+    return (
+        <button
+            onClick={onClick}
+            className={`
+                w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all group relative overflow-hidden
+                ${active ? 'bg-lumen-accent/10 text-white' : 'text-lumen-textMuted hover:text-white hover:bg-white/5'}
+            `}
+        >
+            {active && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-lumen-accent rounded-r-full shadow-[0_0_10px_#5E60CE]"></div>
+            )}
+            <span className={`transition-colors ${active ? 'text-lumen-accent' : 'group-hover:text-lumen-accent'}`}>
+                {icon}
+            </span>
+            <span className="font-medium text-sm">{label}</span>
+        </button>
     );
 }

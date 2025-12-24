@@ -47,43 +47,50 @@ export default function LoginView() {
     };
 
     return (
-        <div className="min-h-screen bg-[#111] flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-[#1a1a1a] border border-white/10 rounded-2xl p-8 shadow-2xl">
+
+        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans">
+            <div className="liquid-bg" />
+
+            <div className="w-full max-w-md liquid-card p-8 shadow-2xl animate-fade-in-up">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lumen-accent/20 mb-4 shadow-[0_0_20px_rgba(94,96,206,0.3)]">
+                        <span className="material-icons-round text-lumen-accent text-4xl">blur_on</span>
+                    </div>
+                    <h1 className="text-3xl font-bold font-display text-white tracking-tight">
                         LumenDS
                     </h1>
-                    <p className="text-white/40 mt-2">Digital Signage Control</p>
+                    <p className="text-lumen-textMuted mt-2 text-sm">Digital Signage Control</p>
                 </div>
 
                 {message && (
-                    <div className={`p-3 rounded-lg mb-4 text-sm ${message.type === 'error' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}`}>
+                    <div className={`p-4 rounded-xl mb-6 text-sm flex items-center gap-3 ${message.type === 'error' ? 'bg-lumen-error/10 text-lumen-error border border-lumen-error/20' : 'bg-lumen-success/10 text-lumen-success border border-lumen-success/20'}`}>
+                        <span className="material-icons-round text-lg">{message.type === 'error' ? 'error' : 'check_circle'}</span>
                         {message.text}
                     </div>
                 )}
 
-                <form onSubmit={handleLogin} className="space-y-4">
+                <form onSubmit={handleLogin} className="space-y-5">
                     <div>
-                        <div className="relative">
-                            <Mail className="absolute left-3 top-3 text-white/20" size={20} />
+                        <div className="relative group">
+                            <Mail className="absolute left-4 top-3.5 text-lumen-textMuted group-focus-within:text-lumen-accent transition-colors" size={20} />
                             <input
                                 type="email"
                                 placeholder="Email"
                                 required
-                                className="w-full bg-black/20 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white outline-none focus:border-blue-500 transition-colors"
+                                className="w-full bg-black/20 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white outline-none focus:border-lumen-accent focus:bg-black/40 transition-all placeholder:text-lumen-textMuted/50"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
                             />
                         </div>
                     </div>
                     <div>
-                        <div className="relative">
-                            <Lock className="absolute left-3 top-3 text-white/20" size={20} />
+                        <div className="relative group">
+                            <Lock className="absolute left-4 top-3.5 text-lumen-textMuted group-focus-within:text-lumen-accent transition-colors" size={20} />
                             <input
                                 type="password"
                                 placeholder="Senha"
                                 required
-                                className="w-full bg-black/20 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white outline-none focus:border-blue-500 transition-colors"
+                                className="w-full bg-black/20 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white outline-none focus:border-lumen-accent focus:bg-black/40 transition-all placeholder:text-lumen-textMuted/50"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
                             />
@@ -93,16 +100,16 @@ export default function LoginView() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-xl transition-all shadow-lg hover:shadow-blue-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        className="w-full bg-lumen-accent hover:bg-lumen-accentHover text-white font-bold py-3.5 rounded-xl transition-all shadow-lg hover:shadow-lumen-accent/30 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                        {loading ? <Loader2 className="animate-spin" /> : (mode === 'login' ? 'Entrar' : 'Criar Conta')}
+                        {loading ? <Loader2 className="animate-spin" /> : (mode === 'login' ? 'Entrar na Plataforma' : 'Criar Conta Grátis')}
                     </button>
                 </form>
 
-                <div className="mt-6 text-center">
+                <div className="mt-8 pt-6 border-t border-white/5 text-center">
                     <button
                         onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-                        className="text-white/40 hover:text-white text-sm transition-colors"
+                        className="text-lumen-textMuted hover:text-white text-sm transition-colors font-medium"
                     >
                         {mode === 'login' ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Entre'}
                     </button>

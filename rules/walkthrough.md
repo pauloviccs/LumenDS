@@ -1,51 +1,50 @@
-# Walkthrough: Fixing Samsung TV Persistent Cache
+# Walkthrough: Dashboard Visual Rework (Liquid Glass)
 
-## The Problem
-Samsung Smart TVs (Tizen OS) have an extremely aggressive caching mechanism for Single Page Applications (SPAs).
-- **Issue:** The TV continued to load an old version of `index.html` even after deployments, clearing browser cookies, and using query parameters (`?v=2`).
-- **Symptom:** A debug overlay (green text) persisted on screen despite being removed from the codebase.
+## The Goal
+Transition the LumenDS Dashboard from a generic functional interface to a premium "Liquid Glass" aesthetic, inspired by high-end dark mode OS designs.
 
-## The Solution: "The Nuclear Option"
+## Design System: "Liquid Glass" (Pixel-Perfect)
+We implemented a high-fidelity "Liquid Glass" design system based on `Reference_Lumen_Dashboard.html`.
 
-We implemented a multi-layered strategy to force the TV to abandon its cache.
+### Key Features
+- **Lumen Palette:**
+    - `lumen-bg`: #050510 (Deep Void)
+    - `lumen-accent`: #5E60CE (Electric Blurple)
+    - `lumen-glass`: rgba(20, 20, 30, 0.4)
+    - `lumen-textMuted`: rgba(255, 255, 255, 0.6)
+- **Typography:**
+    - Headers: `Montserrat` (`font-display`)
+    - Body: `Inter` (`font-sans`)
+- **Components:**
+    - `.liquid-card`: Backdrop blur (40px), saturation boost, white border rim.
+    - `.liquid-bg`: Animated mesh gradient background.
+    - Custom Scrollbars: Thin, rounded, semi-transparent.
+    - Chart.js: Gradient fills matching the accent color.
 
-### 1. Service Worker Killer
-We injected code into the application boot process to detect and unregister any existing Service Workers, which are often responsible for serving stale content.
+## Changes Implemented
 
-```javascript
-// boot.jsx
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function (registrations) {
-    for (let registration of registrations) {
-      registration.unregister(); // Force Unregister
-    }
-    caches.keys().then(names => {
-      for (let name of names) caches.delete(name); // Delete Cache Storage
-    });
-  });
-}
-```
+### 1. Global Layout (`MainLayout.jsx`)
+- Replaced the floating island menu with a **Fixed Glass Sidebar**.
+- Implemented global `liquid-bg` with animated mesh gradients.
+- Added dynamic Header logic based on the active view.
 
-### 2. File Renaming (Cache Busting)
-We renamed the entry point from `main.jsx` to `boot.jsx`.
-- If the TV loads the old cached `index.html`, it tries to fetch `main.jsx`.
-- Since `main.jsx` no longer exists on the server, this forces a failure or revalidation, eventually leading the TV to fetch the new `index.html` which points to `boot.jsx`.
+### 2. Dashboard View (`DashboardView.jsx`)
+- **New View:** Created a dedicated Overview / Statistics page.
+- **Charts:** Integrated `chart.js` for "Network Activity" visualization with gradient fills.
+- **KPI Cards:** Implemented 4 key metric cards (Screens, Storage, Playlists, Impressions) with visual bars and glass styling.
+- **Recent Activity:** Added a styled list of recent screen statuses.
 
-### 3. The Reset Page (MPA Mode)
-We created a dedicated `reset.html` entry point.
-- **Why:** The TV refused to update the root `/` URL.
-- **How:** We configured Vite to build `reset.html` as a second entry point (Multi-Page App).
-- **Usage:** Navigating to `/reset.html` loads a fresh page that triggers the "Killer" logic, wiping the cache clean.
+### 3. Visual Consistency Updates
+- **ScreensView:** Wrapped list in `.liquid-card`, updated Action Bar, and styled the Pairing Modal.
+- **PlaylistsView:** Updated cards to use `.liquid-card`, added hover effects, and styled the "Create Playlist" modal.
+- **MediaView:** Simplified the header (removed redundant titles), styled the Asset Cards to use the liquid effect, and improved the "Selection Context" bar.
+- **SettingsView:** Refined sections into glass panels and removed redundant page titles.
+- **LoginView:** Full rework of the Login page to match the App's branding (Liquid Card centered on Mesh Background).
 
-### 4. Server-Side Headers
-We updated `vercel.json` to send aggressive `Clear-Site-Data` headers.
+## Tech Stack Additions
+- `chart.js` & `react-chartjs-2`: For the dashboard analytics.
+- Google Fonts: Inter & Montserrat.
+- Material Icons Round.
 
-```json
-{
-  "key": "Clear-Site-Data",
-  "value": "\"cache\""
-}
-```
-
-## Result
-The Player now successfully loads version `v1.2.0 - BOOT` without artifacts.
+## Gallery
+(User can view the live app to see the results)

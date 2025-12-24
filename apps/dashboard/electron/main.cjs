@@ -29,7 +29,7 @@ ipcMain.handle('get-assets', async (event, subDir = '') => {
                 path: fullPath,
                 relativePath: path.join(subDir, file).replace(/\\/g, '/'),
                 size: isDirectory ? '-' : (stats.size / 1024 / 1024).toFixed(2) + ' MB',
-                type: isDirectory ? 'folder' : (file.match(/\.(mp4|webm)$/i) ? 'video' : 'image'),
+                type: isDirectory ? 'folder' : (file.match(/\.(mp4|webm|mov)$/i) ? 'video' : 'image'),
                 preview: isDirectory ? null : 'file://' + fullPath.replace(/\\/g, '/')
             };
         });
@@ -37,6 +37,44 @@ ipcMain.handle('get-assets', async (event, subDir = '') => {
         console.error(e);
         return [];
     }
+});
+
+ipcMain.handle('get-system-stats', async () => {
+    return {
+        platform: os.platform(),
+        release: os.release(),
+        totalMem: os.totalmem(),
+        freeMem: os.freemem(),
+        uptime: os.uptime(),
+        cpus: os.cpus(),
+        totalRequests: globalRequestCount || 0
+    };
+});
+
+ipcMain.handle('get-storage-usage', async () => {
+    if (process.platform === 'win32') {
+        try {
+            const { execSync } = require('child_process');
+            // PowerShell command to get C: drive usage as JSON
+            const output = execSync('powershell "Get-PSDrive C | Select-Object Used,Free | ConvertTo-Json"').toString();
+            const data = JSON.parse(output);
+
+            if (data) {
+                const used = data.Used;
+                const free = data.Free;
+                const total = used + free;
+                return {
+                    usedGb: (used / 1024 / 1024 / 1024).toFixed(1),
+                    totalGb: (total / 1024 / 1024 / 1024).toFixed(0),
+                    percent: Math.round((used / total) * 100)
+                };
+            }
+        } catch (e) {
+            console.error('Storage check failed:', e);
+        }
+    }
+    // Fallback Mock
+    return { usedGb: 120, totalGb: 500, percent: 24 };
 });
 
 // Recursive flatten helper
@@ -68,14 +106,14 @@ ipcMain.handle('get-all-assets-flattened', async () => {
             const fileName = path.basename(fullPath);
 
             // Filter only media
-            if (!fileName.match(/\.(mp4|webm|jpg|jpeg|png)$/i)) return null;
+            if (!fileName.match(/\.(mp4|webm|jpg|jpeg|png|mov)$/i)) return null;
 
             return {
                 name: fileName,
                 path: fullPath, // Absolute path (legacy support)
                 relativePath: relativePath, // Local server path identifier
                 size: (stats.size / 1024 / 1024).toFixed(2) + ' MB',
-                type: fileName.match(/\.(mp4|webm)$/i) ? 'video' : 'image',
+                type: fileName.match(/\.(mp4|webm|mov)$/i) ? 'video' : 'image',
             };
         }).filter(f => f !== null);
     } catch (e) {
@@ -101,7 +139,7 @@ ipcMain.handle('create-folder', async (event, { subDir, name }) => {
 ipcMain.handle('open-file-dialog', async () => {
     const result = await dialog.showOpenDialog({
         properties: ['openFile', 'multiSelections'],
-        filters: [{ name: 'Media', extensions: ['jpg', 'png', 'mp4', 'webm'] }]
+        filters: [{ name: 'Media', extensions: ['jpg', 'png', 'mp4', 'webm', 'mov'] }]
     });
     return result.filePaths;
 });
@@ -206,8 +244,13 @@ const http = require('http');
 
 const SERVER_PORT = 11222;
 
+// Global Request Counter for Dashboard
+let globalRequestCount = 0;
+
 const startLocalServer = () => {
     const server = http.createServer((req, res) => {
+        globalRequestCount++;
+
         // Simple CORS
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -281,6 +324,17 @@ const startLocalServer = () => {
                 const fileSize = stat.size;
                 const range = req.headers.range;
 
+                // --- MIME TYPE DETECTION FIX ---
+                const ext = path.extname(filePath).toLowerCase();
+                let mimeType = 'application/octet-stream';
+                if (ext === '.mp4') mimeType = 'video/mp4';
+                else if (ext === '.webm') mimeType = 'video/webm';
+                else if (ext === '.mov') mimeType = 'video/quicktime';
+                else if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+                else if (ext === '.png') mimeType = 'image/png';
+                else if (ext === '.gif') mimeType = 'image/gif';
+                // -------------------------------
+
                 if (range) {
                     const parts = range.replace(/bytes=/, "").split("-");
                     const start = parseInt(parts[0], 10);
@@ -292,7 +346,7 @@ const startLocalServer = () => {
                         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
                         'Accept-Ranges': 'bytes',
                         'Content-Length': chunksize,
-                        'Content-Type': 'video/mp4', // Naive MIME
+                        'Content-Type': mimeType,
                     };
 
                     res.writeHead(206, head);
@@ -300,7 +354,7 @@ const startLocalServer = () => {
                 } else {
                     const head = {
                         'Content-Length': fileSize,
-                        'Content-Type': 'video/mp4',
+                        'Content-Type': mimeType,
                     };
                     res.writeHead(200, head);
                     fs.createReadStream(filePath).pipe(res);
@@ -324,5 +378,3 @@ const startLocalServer = () => {
 };
 
 startLocalServer();
-
-// ... existing createWindow ...

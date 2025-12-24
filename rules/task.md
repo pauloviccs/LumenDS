@@ -11,8 +11,11 @@
     - [x] Setup Supabase Project (DB, Auth, Storage) <!-- id: 7 -->
     - [x] Configure Database Schema <!-- id: 8 -->
 
-- [/] Dashboard Development (Apple Design Style) <!-- id: 9 -->
-    - [/] Setup Tailwind + UI Components (Glassmorphism, Minimalist) <!-- id: 10 -->
+- [x] Visual Rework 2.0 (Pixel-Perfect Liquid Glass) <!-- id: 11 -->
+    - [x] Integrate Reference CSS/Tailwind Config <!-- id: 12 -->
+    - [x] Refactor MainLayout (Sidebar/Header) <!-- id: 13 -->
+    - [x] Refactor DashboardView (KPIs/Chart) <!-- id: 14 -->
+    - [x] Standardize All Views (Login, Screens, Playlists, Media, Settings) <!-- id: 15 -->
     - [x] Playlist Creator (Drag & Drop + Transitions) <!-- id: 12 -->
     - [x] Asset Management View (Upload, Folders) <!-- id: 11 -->
     - [x] Screen Manager (Status, Assign Playlists) <!-- id: 13 -->
@@ -35,7 +38,7 @@
     - [x] Test Loop & Realtime Updates <!-- id: 27 -->
 
 - [ ] Authentication & Security <!-- id: 28 -->
-    - [ ] Login View (Email/Github) <!-- id: 29 -->
+    - [x] Login View (Email/Github - Liquid Styled) <!-- id: 29 -->
     - [ ] Route Protection (AuthGuard) <!-- id: 30 -->
     - [x] Secure RLS Policies (User Scoped) <!-- id: 31 -->
     - [x] Public Access for Player (Read-Only) <!-- id: 32 -->

@@ -1,0 +1,21 @@
+# Task List: LumenDS Analysis & Optimization
+
+- [ ] **Phase 1: Project Analysis**
+    - [/] Explore project structure and file organization <!-- id: 0 -->
+    - [/] Analyze frontend and backend technologies <!-- id: 1 -->
+    - [/] Map current architecture and data flow <!-- id: 2 -->
+    - [/] Identify completed, partial, and planned features <!-- id: 3 -->
+- [ ] **Phase 2: Problem Identification**
+    - [/] Identify known bugs and architectural issues <!-- id: 4 -->
+    - [/] Locate technical debt and future risks <!-- id: 5 -->
+    - [/] Analyze performance and scalability bottlenecks <!-- id: 6 -->
+- [ ] **Phase 3: Critical Supabase Egress Resolution**
+    - [/] Audit Realtime subscriptions and usage <!-- id: 7 -->
+    - [/] Audit Storage usage and caching strategies <!-- id: 8 -->
+    - [/] Analyze polling mechanisms and query efficiency <!-- id: 9 -->
+    - [/] Determine root cause of excessive egress <!-- id: 10 -->
+    - [/] Implement technical solutions (code fixes) <!-- id: 11 -->
+- [ ] **Phase 4: Improvement Proposal**
+    - [/] Define short, medium, and long-term improvements <!-- id: 12 -->
+- [ ] **Phase 5: Documentation**
+    - [/] Create `rules/builds/Build v0.1.2.md` <!-- id: 13 -->

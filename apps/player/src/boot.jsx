@@ -69,7 +69,7 @@ function App() {
     checkRegistration(code);
 
     // Polling for registration (Simple for v1)
-    const interval = setInterval(() => checkRegistration(code), 5000);
+    const interval = setInterval(() => checkRegistration(code), 30000);
     return () => clearInterval(interval);
   };
 

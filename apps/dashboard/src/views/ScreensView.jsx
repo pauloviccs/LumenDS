@@ -38,8 +38,8 @@ const StatusBadge = ({ status }) => {
     const isOnline = status === 'online';
     return (
         <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${isOnline
-                ? 'bg-lumen-success/20 text-lumen-success border-lumen-success/30'
-                : 'bg-lumen-error/20 text-lumen-error border-lumen-error/30'
+            ? 'bg-lumen-success/20 text-lumen-success border-lumen-success/30'
+            : 'bg-lumen-error/20 text-lumen-error border-lumen-error/30'
             }`}>
             {isOnline ? 'ONLINE' : 'OFFLINE'}
         </span>
@@ -65,14 +65,34 @@ export default function ScreensView() {
         fetchScreens();
         fetchPlaylists();
 
+        let timeoutId;
         const subscription = supabase
             .channel('public:screens')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'screens' }, () => {
-                fetchScreens();
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'screens' }, (payload) => {
+                // Optimization: Ignore updates where ONLY 'last_ping' changed
+                // This prevents the Dashboard from re-fetching the list every 30s per screen
+                if (payload.eventType === 'UPDATE' && payload.old && payload.new) {
+                    const keys = Object.keys(payload.new);
+                    const changes = keys.filter(key => payload.new[key] !== payload.old[key]);
+
+                    // If the ONLY change is 'last_ping', ignore it.
+                    if (changes.length === 1 && changes[0] === 'last_ping') {
+                        // console.log('Ignoring heartbeat update for:', payload.new.name);
+                        return;
+                    }
+                }
+
+                // Debounce: Wait 2s before fetching. If another event comes, reset timer.
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    console.log('Realtime update received. Fetching screens...');
+                    fetchScreens();
+                }, 2000);
             })
             .subscribe();
 
         return () => {
+            clearTimeout(timeoutId);
             subscription.unsubscribe();
         };
     }, []);
@@ -83,7 +103,9 @@ export default function ScreensView() {
             const { data, error } = await supabase
                 .from('screens')
                 .select(`*, playlists ( name )`)
-                .order('created_at', { ascending: false });
+                .select(`*, playlists ( name )`)
+                .order('created_at', { ascending: false })
+                .limit(50); // Safety Limit for v0.1.2
 
             if (error) {
                 console.warn('Supabase Fetch Error (using fallback):', error);

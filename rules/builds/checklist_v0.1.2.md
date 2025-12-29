@@ -22,14 +22,14 @@
 
 ## 2. Validação Funcional (Smoke Test)
 
-- [ ] **Pareamento**:
-    - [ ] Gere um código no Player.
-    - [ ] Insira no Dashboard.
-    - [ ] Player deve mudar para "Sem Playlist" ou começar a tocar.
-- [ ] **Upload de Mídia**:
-    - [ ] Importe um vídeo curto no Dashboard.
-    - [ ] Sincronize com a nuvem.
-    - [ ] Verifique se o Player baixa e toca.
+- [x] **Pareamento**:
+    - [x] Gere um código no Player.
+    - [x] Insira no Dashboard.
+    - [x] Player deve mudar para "Sem Playlist" ou começar a tocar.
+- [x] **Upload de Mídia**:
+    - [x] Importe um vídeo curto no Dashboard.
+    - [x] Sincronize com a nuvem.
+    - [x] Verifique se o Player baixa e toca.
 
 ## 3. Monitoramento Pós-Deploy
 

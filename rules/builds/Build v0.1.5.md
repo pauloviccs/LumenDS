@@ -1,4 +1,4 @@
-# LumenDS — Build v0.1.5 (Planejamento)
+## LumenDS — Build v0.1.5 (Planejamento)
 
 > **Status**: Em Planejamento
 > **Base**: Build v0.1.2 (Estável)

@@ -1,8 +1,6 @@
-# Checklist de Validação Pré-Deploy (Build v0.1.2)
+## Checklist de Validação Pré-Deploy (Build v0.1.2)
 
-> **ATENÇÃO DESENVOLVEDOR**: Não realize o build/deploy sem verificar estes itens. A v0.1.2 introduz mudanças críticas para evitar billing do Supabase.
-
-## 1. Auditoria de Egress (CRÍTICO)
+## 1. Auditoria de Egress (RESOLVIDO)
 
 ### Player (`apps/player`)
 - [x] **Meta Tags**: Abra `apps/player/index.html` e confirme que **NÃO** existem tags `no-store` ou `no-cache`.

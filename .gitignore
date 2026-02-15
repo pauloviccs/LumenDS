@@ -3,3 +3,7 @@ apps/dashboard/release/
 *.exe
 *.msi
 sidecar/
+
+.agent
+.agent/*
+.agent/**
